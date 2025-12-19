@@ -1,0 +1,5 @@
+require('rosie.keymap')
+require('rosie.lazy')
+require('rosie.lsp')
+require('rosie.set')
+require('rosie.treesitter')

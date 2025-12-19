@@ -1,0 +1,4 @@
+# This is just to test out a c project with the highlighting. Not needed in repo
+lua/rosie/c_test
+
+lazy-lock.json
