@@ -1,10 +1,13 @@
+-- Better path searching --
+vim.opt.path:append("**")
+
 -- Lines & Numbers --
 vim.opt.number         = true
 vim.opt.relativenumber = true
 vim.opt.wrap           = true
 
 -- Tabs --
-vim.opt.expandtab   = true
+vim.opt.expandtab   = false
 vim.opt.tabstop     = 8
 vim.opt.softtabstop = 8
 vim.opt.shiftwidth  = 8
@@ -37,4 +40,4 @@ vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", {
 
 -- Etc --
 vim.opt.updatetime = 250
-vim.opt.cinoptions = vim.opt.cinoptions + { ':0' }
+vim.opt.cinoptions:append({':0'})
