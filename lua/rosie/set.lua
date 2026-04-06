@@ -2,9 +2,23 @@
 vim.opt.path:append("**")
 vim.opt.wildmenu = true
 vim.api.nvim_create_user_command('MakeTags', function()
+	if 0 == vim.fn.executable('ctags') then
+		vim.notify("ERROR: `ctags` is not an executable " ..
+			   "on this system. Please install it via " ..
+			   "your distro's package manager!",
+			   vim.log.levels.ERROR);
+		return;
+	end
+	
 	vim.fn.jobstart({'ctags', '-R', '.'}, {
-		on_exit = function()
-			print("Successfully generated CTags!")
+		on_exit = function(_, code)
+			if 0 == code then
+				vim.notify("Successfully generated CTags!",
+					   vim.log.levels.INFO)
+			else
+				vim.notify("ERROR: Failed to generate CTags!",
+					   vim.log.levels.ERROR)
+			end
 		end
 	})
 end, {})
