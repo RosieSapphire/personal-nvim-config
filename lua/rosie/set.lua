@@ -1,5 +1,13 @@
 -- Better path searching --
 vim.opt.path:append("**")
+vim.opt.wildmenu = true
+vim.api.nvim_create_user_command('MakeTags', function()
+	vim.fn.jobstart({'ctags', '-R', '.'}, {
+		on_exit = function()
+			print("Successfully generated CTags!")
+		end
+	})
+end, {})
 
 -- Lines & Numbers --
 vim.opt.number         = true
