@@ -2,6 +2,59 @@
 vim.opt.path:append("**")
 vim.opt.wildmenu = true
 
+vim.keymap.set('n', '<leader>*h', function()
+	local word = vim.fn.expand('<cword>')
+	vim.cmd('vimgrep /' .. word .. '/gj **/*.h')
+	vim.cmd('copen')
+end, { silent = true })
+
+vim.keymap.set('n', '<leader>*c', function()
+	local word = vim.fn.expand('<cword>')
+	vim.cmd('vimgrep /' .. word .. '/gj **/*.c')
+	vim.cmd('copen')
+end, { silent = true })
+
+vim.keymap.set('n', '<leader>*a', function()
+	local word = vim.fn.expand('<cword>')
+	vim.cmd('vimgrep /' .. word .. '/gj **/*.{c,h}')
+	vim.cmd('copen')
+end, { silent = true })
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "qf",
+	callback = function()
+		vim.keymap.set("n", "<CR>", function()
+			local idx = vim.fn.line(".") -- current line in qf list
+			vim.cmd("wincmd p")	     -- go back to  orig window
+			vim.cmd("cc " .. idx)	     -- jump to THAT entry
+			vim.cmd("cclose")						-- close quickfix
+		end, { buffer = true })
+	end,
+})
+
+-- Snippets --
+vim.keymap.set('n', ',pgcc', function()
+	local file = vim.fn.expand('$HOME/.vim/pragma_gcc')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('j$i', 'n', false)
+end, { noremap = true, silent = true })
+
+vim.keymap.set('n', ',pcl', function()
+	local file = vim.fn.expand('$HOME/.vim/pragma_clang')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('j$i', 'n', false)
+end, { noremap = true, silent = true })
+
+vim.keymap.set('n', ',hello', function()
+	local file = vim.fn.expand('$HOME/.vim/hello_world')
+	vim.cmd("read " .. file)
+end, { noremap = true, silent = true })
+
+vim.keymap.set('n', ',dbm', function()
+	local file = vim.fn.expand('$HOME/.vim/debug_macro')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('MakeTags', function()
 	if 0 == vim.fn.executable('ctags') then
