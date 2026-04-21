@@ -55,6 +55,16 @@ vim.keymap.set('n', ',dbm', function()
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
+vim.keymap.set('n', ',nif64', function()
+	local file = vim.fn.expand('$HOME/.vim/ifn_n64')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+vim.keymap.set('n', ',if64', function()
+	local file = vim.fn.expand('$HOME/.vim/if_n64')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('MakeTags', function()
 	if 0 == vim.fn.executable('ctags') then
