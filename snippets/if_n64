@@ -1,0 +1,3 @@
+#ifdef N64
+#else /* #ifdef N64 */
+#endif /* #ifdef N64 #else */

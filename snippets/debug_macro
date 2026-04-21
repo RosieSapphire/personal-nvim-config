@@ -1,0 +1,9 @@
+#if 0
+#define SOMETHING_DEBUG
+#endif
+
+#ifdef SOMETHING_DEBUG
+#define DEBUGF(...) debugf(__VA_ARGS__)
+#else /* #ifdef SOMETHING_DEBUG */
+#define DEBUGF(...) ((void)0)
+#endif /* #ifdef SOMETHING_DEBUG #else */

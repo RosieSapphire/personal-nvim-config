@@ -1,0 +1,3 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-W"
+#pragma clang diagnostic pop

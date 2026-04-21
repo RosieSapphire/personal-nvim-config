@@ -34,34 +34,34 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- Snippets --
 vim.keymap.set('n', ',pgcc', function()
-	local file = vim.fn.expand('$HOME/.vim/pragma_gcc')
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_gcc')
 	vim.cmd('read ' .. file)
 	vim.api.nvim_feedkeys('j$i', 'n', false)
 end, { noremap = true, silent = true })
 
 vim.keymap.set('n', ',pcl', function()
-	local file = vim.fn.expand('$HOME/.vim/pragma_clang')
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_clang')
 	vim.cmd('read ' .. file)
 	vim.api.nvim_feedkeys('j$i', 'n', false)
 end, { noremap = true, silent = true })
 
 vim.keymap.set('n', ',hello', function()
-	local file = vim.fn.expand('$HOME/.vim/hello_world')
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/hello_world')
 	vim.cmd("read " .. file)
 end, { noremap = true, silent = true })
 
 vim.keymap.set('n', ',dbm', function()
-	local file = vim.fn.expand('$HOME/.vim/debug_macro')
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/debug_macro')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
 vim.keymap.set('n', ',nif64', function()
-	local file = vim.fn.expand('$HOME/.vim/ifn_n64')
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/ifn_n64')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
 vim.keymap.set('n', ',if64', function()
-	local file = vim.fn.expand('$HOME/.vim/if_n64')
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/if_n64')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
