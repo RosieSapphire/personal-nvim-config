@@ -2,19 +2,43 @@
 vim.opt.path:append("**")
 vim.opt.wildmenu = true
 
+-- Find item in all header files
 vim.keymap.set('n', '<leader>*h', function()
+	local word = vim.fn.expand('<cword>')
+	vim.cmd('vimgrep /\\<' .. word .. '\\>/gj **/*.h')
+	vim.cmd('copen')
+end, { silent = true })
+
+-- Find item in all source files
+vim.keymap.set('n', '<leader>*c', function()
+	local word = vim.fn.expand('<cword>')
+	vim.cmd('vimgrep /\\<' .. word .. '\\>/gj **/*.c')
+	vim.cmd('copen')
+end, { silent = true })
+
+-- Find item in all header and source files
+vim.keymap.set('n', '<leader>*a', function()
+	local word = vim.fn.expand('<cword>')
+	vim.cmd('vimgrep /\\<' .. word .. '\\>/gj **/*.{c,h}')
+	vim.cmd('copen')
+end, { silent = true })
+
+-- Find item in all header files (impercise)
+vim.keymap.set('n', '<leader>*ih', function()
 	local word = vim.fn.expand('<cword>')
 	vim.cmd('vimgrep /' .. word .. '/gj **/*.h')
 	vim.cmd('copen')
 end, { silent = true })
 
-vim.keymap.set('n', '<leader>*c', function()
+-- Find item in all source files (impercise)
+vim.keymap.set('n', '<leader>*ic', function()
 	local word = vim.fn.expand('<cword>')
 	vim.cmd('vimgrep /' .. word .. '/gj **/*.c')
 	vim.cmd('copen')
 end, { silent = true })
 
-vim.keymap.set('n', '<leader>*a', function()
+-- Find item in all header and source files (impercise)
+vim.keymap.set('n', '<leader>*ia', function()
 	local word = vim.fn.expand('<cword>')
 	vim.cmd('vimgrep /' .. word .. '/gj **/*.{c,h}')
 	vim.cmd('copen')
