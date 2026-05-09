@@ -143,7 +143,7 @@ vim.keymap.set('n', ',ityp', function()
 end, { noremap = true, silent = true })
 
 -- Structures
-vim.keymap.set('n', ',istr', function()
+vim.keymap.set('n', ',istru', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_structs')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
