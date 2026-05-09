@@ -182,6 +182,13 @@ vim.keymap.set('n', ',inc', function()
 	vim.cmd('read ' .. file)
 	vim.api.nvim_feedkeys('$hhi', 'n', false)
 end, { noremap = true, silent = true })
+--
+-- Include setup (with brackets, instead)
+vim.keymap.set('n', ',binc', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/include_setupb')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('$hhi', 'n', false)
+end, { noremap = true, silent = true })
 
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('MakeTags', function()
