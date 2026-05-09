@@ -172,6 +172,17 @@ vim.keymap.set('n', ',iinl', function()
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
+--------------------
+-- OTHER SNIPPETS --
+--------------------
+
+-- Include setup
+vim.keymap.set('n', ',inc', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/include_setup')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('$hhi', 'n', false)
+end, { noremap = true, silent = true })
+
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('MakeTags', function()
 	if 0 == vim.fn.executable('ctags') then
