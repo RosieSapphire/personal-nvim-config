@@ -1,4 +1,7 @@
--- Better path searching --
+--------------------------------------
+-- MACROS FOR BETTER PATH SEARCHING --
+--------------------------------------
+
 vim.opt.path:append("**")
 vim.opt.wildmenu = true
 
@@ -23,24 +26,31 @@ vim.keymap.set('n', '<leader>*a', function()
 	vim.cmd('copen')
 end, { silent = true })
 
--- Find item in all header files (impercise)
+-- Find item in all header files (imprecise)
 vim.keymap.set('n', '<leader>*ih', function()
 	local word = vim.fn.expand('<cword>')
 	vim.cmd('vimgrep /' .. word .. '/gj **/*.h')
 	vim.cmd('copen')
 end, { silent = true })
 
--- Find item in all source files (impercise)
+-- Find item in all source files (imprecise)
 vim.keymap.set('n', '<leader>*ic', function()
 	local word = vim.fn.expand('<cword>')
 	vim.cmd('vimgrep /' .. word .. '/gj **/*.c')
 	vim.cmd('copen')
 end, { silent = true })
 
--- Find item in all header and source files (impercise)
+-- Find item in all header and source files (imprecise)
 vim.keymap.set('n', '<leader>*ia', function()
 	local word = vim.fn.expand('<cword>')
 	vim.cmd('vimgrep /' .. word .. '/gj **/*.{c,h}')
+	vim.cmd('copen')
+end, { silent = true })
+
+-- Find item in all header and source files (imprecise)
+vim.keymap.set('n', '<leader>*h', function()
+	local word = vim.fn.expand('<cword>')
+	vim.cmd('vimgrep /\\<' .. word .. '\\>/gj **/*.h')
 	vim.cmd('copen')
 end, { silent = true })
 
@@ -56,36 +66,85 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
--- Snippets --
+-------------------------------
+-- SNIPPETS FOR GENERAL SHIT --
+-------------------------------
+
+-- Pragma warning diagnostics for GCC
 vim.keymap.set('n', ',pgcc', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_gcc')
 	vim.cmd('read ' .. file)
 	vim.api.nvim_feedkeys('j$i', 'n', false)
 end, { noremap = true, silent = true })
 
-vim.keymap.set('n', ',pcl', function()
+-- Pragma warning diagnostics for clang
+vim.keymap.set('n', ',pcla', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_clang')
 	vim.cmd('read ' .. file)
 	vim.api.nvim_feedkeys('j$i', 'n', false)
 end, { noremap = true, silent = true })
 
+-- Just a simple hello world program in C
 vim.keymap.set('n', ',hello', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/hello_world')
 	vim.cmd("read " .. file)
 end, { noremap = true, silent = true })
 
+-- Debug macro for a specific module
 vim.keymap.set('n', ',dbm', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/debug_macro')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
+-- If `N64` is NOT defined
 vim.keymap.set('n', ',nif64', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/ifn_n64')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
+-- If `N64` IS defined
 vim.keymap.set('n', ',if64', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/if_n64')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+--------------------------------------------------
+-- SNIPPETS FOR INCLUDE HEADER SECTION COMMENTS --
+--------------------------------------------------
+
+-- Includes
+vim.keymap.set('n', ',hinc', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_includes')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Defines
+vim.keymap.set('n', ',hdef', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_defines')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Macros
+vim.keymap.set('n', ',hmac', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_macros')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Typedefs
+vim.keymap.set('n', ',htyp', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_typedefs')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Structures
+vim.keymap.set('n', ',hstr', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_structs')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Function Declarations
+vim.keymap.set('n', ',hfun', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_functions')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
@@ -100,12 +159,8 @@ vim.api.nvim_create_user_command('MakeTags', function()
 	end
 	
 	vim.fn.jobstart({'ctags', '-R', '.'}, {
-		on_exit = function(_, code)
-			if 0 ~= code then
-				vim.notify("ERROR: Failed to generate CTags!",
-					   vim.log.levels.ERROR)
-			end
-		end
+  on_exit = function(_, code) if 0 ~= code then vim.notify(
+      "ERROR: Failed to generate CTags!", vim.log.levels.ERROR) end end
 	})
 end, {})
 
