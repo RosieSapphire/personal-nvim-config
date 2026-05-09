@@ -113,37 +113,37 @@ end, { noremap = true, silent = true })
 --------------------------------------------------
 
 -- Includes
-vim.keymap.set('n', ',hinc', function()
+vim.keymap.set('n', ',iinc', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_includes')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
 -- Defines
-vim.keymap.set('n', ',hdef', function()
+vim.keymap.set('n', ',idef', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_defines')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
 -- Macros
-vim.keymap.set('n', ',hmac', function()
+vim.keymap.set('n', ',imac', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_macros')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
 -- Typedefs
-vim.keymap.set('n', ',htyp', function()
+vim.keymap.set('n', ',ityp', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_typedefs')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
 -- Structures
-vim.keymap.set('n', ',hstr', function()
+vim.keymap.set('n', ',istr', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_structs')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
 -- Function Declarations
-vim.keymap.set('n', ',hfun', function()
+vim.keymap.set('n', ',ifun', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_functions')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
