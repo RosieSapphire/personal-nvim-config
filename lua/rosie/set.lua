@@ -148,6 +148,12 @@ vim.keymap.set('n', ',ifun', function()
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
+-- Inline Functions
+vim.keymap.set('n', ',iinl', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_func_inl')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('MakeTags', function()
 	if 0 == vim.fn.executable('ctags') then
