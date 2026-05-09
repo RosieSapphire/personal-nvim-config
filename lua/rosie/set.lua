@@ -148,6 +148,18 @@ vim.keymap.set('n', ',istr', function()
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
+-- External Variables
+vim.keymap.set('n', ',ivex', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_var_ext')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Static Variables
+vim.keymap.set('n', ',ivst', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_var_stat')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
 -- Function Declarations
 vim.keymap.set('n', ',ifun', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_functions')
