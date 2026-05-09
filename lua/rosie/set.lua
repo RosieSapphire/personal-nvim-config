@@ -130,6 +130,12 @@ vim.keymap.set('n', ',imac', function()
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
+-- Enums
+vim.keymap.set('n', ',ienu', function()
+	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_enums')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
 -- Typedefs
 vim.keymap.set('n', ',ityp', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_typedefs')
