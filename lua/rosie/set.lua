@@ -70,6 +70,63 @@ vim.api.nvim_create_autocmd("FileType", {
 -- SNIPPETS FOR GENERAL SHIT --
 -------------------------------
 
+-- Header Guard
+vim.keymap.set('n', ',hg', function()
+	local guard = vim.fn.input('Header Guard Name: ')
+	local view      = vim.fn.winsaveview()
+
+	vim.fn.append(0, {
+		'#ifndef ' .. guard,
+		'#define ' .. guard,
+		''
+	})
+
+	vim.fn.append(vim.fn.line('$'), {
+		'',
+		'#endif /* ' .. guard .. ' */'
+	})
+
+	vim.fn.winrestview(view)
+end, { noremap = true, silent = true })
+
+-- #ifdef
+vim.keymap.set('n', ',ifnd', function()
+	vim.cmd('normal! O')
+	vim.api.nvim_set_current_line('#ifndef ')
+	vim.api.nvim_feedkeys('A', 'n', false)
+end, { noremap = true, silent = true })
+
+-- #define
+vim.keymap.set('n', ',def', function()
+	vim.cmd('normal! o')
+	vim.api.nvim_set_current_line('#define ')
+	vim.api.nvim_feedkeys('A', 'n', false)
+end, { noremap = true, silent = true })
+
+-- #ifndef
+vim.keymap.set('n', ',ifd', function()
+	vim.cmd('normal! O')
+	vim.api.nvim_set_current_line('#ifdef ')
+	vim.api.nvim_feedkeys('A', 'n', false)
+end, { noremap = true, silent = true })
+
+-- #endif
+vim.keymap.set('n', ',ei', function()
+	vim.cmd('normal! o')
+	vim.api.nvim_set_current_line('#endif')
+end, { noremap = true, silent = true })
+
+-- Encase the current line in a comment block
+vim.keymap.set('n', ',ec', function()
+	local line    = vim.api.nvim_get_current_line()
+	local indent  = line:match('^%s*')
+	local content = line:sub(#indent + 1)
+
+	vim.api.nvim_set_current_line(
+		indent .. '/* ' .. content .. ' */'
+	)
+end, { noremap = true, silent = true })
+
 -- Pragma warning diagnostics for GCC
 vim.keymap.set('n', ',pgcc', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_gcc')
