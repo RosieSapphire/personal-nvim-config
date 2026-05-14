@@ -89,32 +89,46 @@ vim.keymap.set('n', ',hg', function()
 	vim.fn.winrestview(view)
 end, { noremap = true, silent = true })
 
--- #ifdef
-vim.keymap.set('n', ',ifnd', function()
-	vim.cmd('normal! O')
-	vim.api.nvim_set_current_line('#ifndef ')
-	vim.api.nvim_feedkeys('A', 'n', false)
-end, { noremap = true, silent = true })
+-- #ifdef & #ifndef
+local function ifdef_mode_normal(guard)
+	return function()
+		local label = vim.fn.input(guard .. ': ')
 
--- #define
-vim.keymap.set('n', ',def', function()
-	vim.cmd('normal! o')
-	vim.api.nvim_set_current_line('#define ')
-	vim.api.nvim_feedkeys('A', 'n', false)
-end, { noremap = true, silent = true })
+		vim.fn.append(vim.fn.line('.'), {
+			guard .. ' ' .. label,
+			'#endif /* ' .. guard .. ' ' .. label .. ' */',
+			''
+		})
+	end
+end
 
--- #ifndef
-vim.keymap.set('n', ',ifd', function()
-	vim.cmd('normal! O')
-	vim.api.nvim_set_current_line('#ifdef ')
-	vim.api.nvim_feedkeys('A', 'n', false)
-end, { noremap = true, silent = true })
+local function ifdef_mode_visual(guard)
+	return function()
+		local line_a = vim.fn.line('v')
+		local line_b = vim.fn.line('.')
+		local label  = vim.fn.input(guard .. ': ')
+	
+		if line_a > line_b then
+			line_a, line_b = line_b, line_a
+		end
+	
+		vim.fn.append(line_b, {
+			'#endif /* ' .. guard .. ' ' .. label .. ' */'
+		})
+	
+		vim.fn.append(line_a - 1, {
+			guard .. ' ' .. label
+		})
+	
+		-- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
+	end
+end
 
--- #endif
-vim.keymap.set('n', ',ei', function()
-	vim.cmd('normal! o')
-	vim.api.nvim_set_current_line('#endif')
-end, { noremap = true, silent = true })
+vim.keymap.set('n', ',ifd', ifdef_mode_normal('#ifdef'), { silent = true })
+vim.keymap.set('x', ',ifd', ifdef_mode_visual('#ifdef'), { silent = true })
+
+vim.keymap.set('n', ',ifnd', ifdef_mode_normal('#ifndef'), { silent = true })
+vim.keymap.set('x', ',ifnd', ifdef_mode_visual('#ifndef'), { silent = true })
 
 -- Encase the current line in a comment block
 vim.keymap.set('n', ',ec', function()
@@ -150,18 +164,6 @@ end, { noremap = true, silent = true })
 -- Debug macro for a specific module
 vim.keymap.set('n', ',dbm', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/debug_macro')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- If `N64` is NOT defined
-vim.keymap.set('n', ',nif64', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/ifn_n64')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- If `N64` IS defined
-vim.keymap.set('n', ',if64', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/if_n64')
 	vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
