@@ -141,6 +141,37 @@ vim.keymap.set('n', ',ec', function()
 	)
 end, { noremap = true, silent = true })
 
+-- Encase an entire visual block with a comment
+vim.keymap.set('x', ',ec', function()
+	local line_a = vim.fn.line('v')
+	local line_b = vim.fn.line('.')
+
+	if line_a > line_b then
+		line_a, line_b = line_b, line_a
+	end
+
+	local lines = vim.api.nvim_buf_get_lines(0, line_a - 1, line_b, false)
+	local indent = lines[1]:match('^%s*') or ''
+	local commented = { indent .. '/*' }
+
+	for _, line in ipairs(lines) do
+		table.insert(commented, indent .. ' * ' .. line:sub(#indent + 1))
+	end
+
+	table.insert(commented, indent .. ' */')
+
+	vim.api.nvim_buf_set_lines(0, line_a - 1, line_b, false, commented)
+
+	-- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
+	-- vim.cmd('normal! zz')
+	
+	vim.api.nvim_feedkeys(
+		vim.api.nvim_replace_termcodes('<Esc>', true, false, true),
+		'n',
+		false
+	)
+end, { noremap = true, silent = true })
+
 -- Pragma warning diagnostics for GCC
 vim.keymap.set('n', ',pgcc', function()
 	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_gcc')
