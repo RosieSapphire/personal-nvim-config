@@ -94,6 +94,11 @@ local function ifdef_mode_normal(guard)
 	return function()
 		local label = vim.fn.input(guard .. ': ')
 
+		-- Exception for `#if 0`
+		if label == '0' then
+			guard = '#if'
+		end
+
 		vim.fn.append(vim.fn.line('.'), {
 			guard .. ' ' .. label,
 			'#endif /* ' .. guard .. ' ' .. label .. ' */',
@@ -107,6 +112,11 @@ local function ifdef_mode_visual(guard)
 		local line_a = vim.fn.line('v')
 		local line_b = vim.fn.line('.')
 		local label  = vim.fn.input(guard .. ': ')
+
+		-- Exception for `#if 0`
+		if label == '0' then
+			guard = '#if'
+		end
 	
 		if line_a > line_b then
 			line_a, line_b = line_b, line_a
