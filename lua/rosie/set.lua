@@ -92,16 +92,19 @@ end, { noremap = true, silent = true })
 -- #ifdef & #ifndef
 local function ifdef_mode_normal(guard)
 	return function()
-		local label = vim.fn.input(guard .. ': ')
+		local label      = vim.fn.input(guard .. ': ')
+		local real_guard = ''
 
 		-- Exception for `#if 0`
 		if label == '0' then
-			guard = '#if'
+			real_guard = '#if'
+		else
+			real_guard = guard
 		end
 
 		vim.fn.append(vim.fn.line('.'), {
-			guard .. ' ' .. label,
-			'#endif /* ' .. guard .. ' ' .. label .. ' */',
+			real_guard .. ' ' .. label,
+			'#endif /* ' .. real_guard .. ' ' .. label .. ' */',
 			''
 		})
 	end
@@ -109,13 +112,16 @@ end
 
 local function ifdef_mode_visual(guard)
 	return function()
-		local line_a = vim.fn.line('v')
-		local line_b = vim.fn.line('.')
-		local label  = vim.fn.input(guard .. ': ')
+		local line_a     = vim.fn.line('v')
+		local line_b     = vim.fn.line('.')
+		local label      = vim.fn.input(guard .. ': ')
+		local real_guard = ''
 
 		-- Exception for `#if 0`
 		if label == '0' then
-			guard = '#if'
+			real_guard = '#if'
+		else
+			real_guard = guard
 		end
 	
 		if line_a > line_b then
@@ -123,11 +129,11 @@ local function ifdef_mode_visual(guard)
 		end
 	
 		vim.fn.append(line_b, {
-			'#endif /* ' .. guard .. ' ' .. label .. ' */'
+			'#endif /* ' .. real_guard .. ' ' .. label .. ' */'
 		})
 	
 		vim.fn.append(line_a - 1, {
-			guard .. ' ' .. label
+			real_guard .. ' ' .. label
 		})
 	
 		-- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
