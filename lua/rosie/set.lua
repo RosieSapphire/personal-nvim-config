@@ -66,11 +66,157 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
--------------------------------
--- SNIPPETS FOR GENERAL SHIT --
--------------------------------
+local snip_dir = '$HOME/.config/nvim/snippets/'
 
--- Header Guard
+-- Pragma warning diagnostics for GCC
+vim.keymap.set('n', ',pgcc', function()
+	local file = vim.fn.expand(snip_dir .. 'pragma_gcc')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('j$i', 'n', false)
+end, { noremap = true, silent = true })
+
+-- Pragma warning diagnostics for clang
+vim.keymap.set('n', ',pcla', function()
+	local file = vim.fn.expand(snip_dir .. 'pragma_clang')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('j$i', 'n', false)
+end, { noremap = true, silent = true })
+
+-- Just a simple hello world program in C
+vim.keymap.set('n', ',hello', function()
+	local file = vim.fn.expand(snip_dir .. 'hello_world')
+	vim.cmd("read " .. file)
+end, { noremap = true, silent = true })
+
+-- Debug macro for a specific module
+vim.keymap.set('n', ',dbm', function()
+	local file = vim.fn.expand(snip_dir .. 'debug_macro')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-------------------------------------------------------------
+-- SNIPPETS FOR INCLUDE HEADER AND SOURCE SECTION COMMENTS --
+-------------------------------------------------------------
+
+-- Defines
+vim.keymap.set('n', ',cdef', function()
+	local file = vim.fn.expand(snip_dir .. 'com/defines')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Enums
+vim.keymap.set('n', ',cenu', function()
+	local file = vim.fn.expand(snip_dir .. 'com/enums')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Inline Functions
+vim.keymap.set('n', ',cfuni', function()
+	local file = vim.fn.expand(snip_dir .. 'com/func_inl')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Private Function Prototypes
+vim.keymap.set('n', ',cfunprp', function()
+	local file = vim.fn.expand(snip_dir .. 'com/func_prv_pro')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Private Function Implementations
+vim.keymap.set('n', ',cfunpri', function()
+	local file = vim.fn.expand(snip_dir .. 'com/func_prv_imp')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Public Function Prototypes
+vim.keymap.set('n', ',cfunpup', function()
+	local file = vim.fn.expand(snip_dir .. 'com/func_pub_pro')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Public Function Definitions
+vim.keymap.set('n', ',cfunpui', function()
+	local file = vim.fn.expand(snip_dir .. 'com/func_pub_imp')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Include Headers
+vim.keymap.set('n', ',cinc', function()
+	local file = vim.fn.expand(snip_dir .. 'com/include')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Macros
+vim.keymap.set('n', ',cmac', function()
+	local file = vim.fn.expand(snip_dir .. 'com/macros')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Structures
+vim.keymap.set('n', ',cstru', function()
+	local file = vim.fn.expand(snip_dir .. 'com/structs')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Typedefs
+vim.keymap.set('n', ',ctyp', function()
+	local file = vim.fn.expand(snip_dir .. 'com/typedefs')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Public Variable Prototypes
+vim.keymap.set('n', ',cvarpup', function()
+	local file = vim.fn.expand(snip_dir .. 'com/var_pub_dec')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Public Variable Implementations
+vim.keymap.set('n', ',cvarpui', function()
+	local file = vim.fn.expand(snip_dir .. 'com/var_pub_imp')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Private Variables
+vim.keymap.set('n', ',cvarpr', function()
+	local file = vim.fn.expand(snip_dir .. 'com/var_prv')
+	vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
+-- Generating CTags for code --
+vim.api.nvim_create_user_command('MakeTags', function()
+	if 0 == vim.fn.executable('ctags') then
+		vim.notify("ERROR: `ctags` is not an executable " ..
+			   "on this system. Please install it via " ..
+			   "your distro's package manager!",
+			   vim.log.levels.ERROR);
+		return;
+	end
+	
+	vim.fn.jobstart({'ctags', '-R', '.'}, {
+  on_exit = function(_, code) if 0 ~= code then vim.notify(
+      "ERROR: Failed to generate CTags!", vim.log.levels.ERROR) end end
+	})
+end, {})
+
+----------------------------------
+-- SNIPPETS FOR CODE GENERATION --
+----------------------------------
+
+-- Include setup with quotation marks
+vim.keymap.set('n', ',inc', function()
+	local file = vim.fn.expand(snip_dir .. '/inc_setup_quote')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('$hhi', 'n', false)
+end, { noremap = true, silent = true })
+
+-- Include setup with angled brackets
+vim.keymap.set('n', ',binc', function()
+	local file = vim.fn.expand(snip_dir .. '/inc_setup_angle')
+	vim.cmd('read ' .. file)
+	vim.api.nvim_feedkeys('$hhi', 'n', false)
+end, { noremap = true, silent = true })
+
+-- Named header guard
 vim.keymap.set('n', ',hg', function()
 	local guard = vim.fn.input('Header Guard Name: ')
 	local view      = vim.fn.winsaveview()
@@ -83,68 +229,145 @@ vim.keymap.set('n', ',hg', function()
 
 	vim.fn.append(vim.fn.line('$'), {
 		'',
-		'#endif /* ' .. guard .. ' */'
+		'#endif /* #ifndef ' .. guard .. ' */'
 	})
 
 	vim.fn.winrestview(view)
 end, { noremap = true, silent = true })
 
--- #ifdef & #ifndef
-local function ifdef_mode_normal(guard)
+-- #ifdef & #ifndef with names
+local function ifdef_mode_normal(guard, do_else)
 	return function()
-		local label      = vim.fn.input(guard .. ': ')
-		local real_guard = ''
+		local name      = vim.fn.input(guard .. ': ')
+		local real_g = ''
 
 		-- Exception for `#if 0`
-		if label == '0' then
-			real_guard = '#if'
+		if name == '0' then
+			real_g = '#if'
 		else
-			real_guard = guard
+			real_g = guard
 		end
 
-		vim.fn.append(vim.fn.line('.'), {
-			real_guard .. ' ' .. label,
-			'#endif /* ' .. real_guard .. ' ' .. label .. ' */',
-			''
-		})
+		vim.fn.append(vim.fn.line('.') - 1,
+			real_g .. ' ' .. name
+		)
+
+		if do_else then
+			vim.fn.append(vim.fn.line('.') - 1,
+				'#else /* ' .. real_g .. ' ' .. name .. ' */'
+			)
+
+			vim.fn.append(vim.fn.line('.') - 1,
+				'#endif /* ' .. real_g .. ' ' .. name .. ' #else */'
+			)
+		else
+			vim.fn.append(vim.fn.line('.') - 1,
+				'#endif /* ' .. real_g .. ' ' .. name .. ' */'
+			)
+		end
 	end
 end
 
-local function ifdef_mode_visual(guard)
+local function ifdef_mode_visual(guard, do_else)
 	return function()
 		local line_a     = vim.fn.line('v')
 		local line_b     = vim.fn.line('.')
-		local label      = vim.fn.input(guard .. ': ')
-		local real_guard = ''
+		local name      = vim.fn.input(guard .. ': ')
+		local real_g = ''
 
 		-- Exception for `#if 0`
-		if label == '0' then
-			real_guard = '#if'
+		if name == '0' then
+			real_g = '#if'
 		else
-			real_guard = guard
+			real_g = guard
 		end
 	
 		if line_a > line_b then
 			line_a, line_b = line_b, line_a
 		end
 	
-		vim.fn.append(line_b, {
-			'#endif /* ' .. real_guard .. ' ' .. label .. ' */'
-		})
+		if do_else == true then
+			vim.fn.append(line_b, {
+				'#else /* ' .. real_g .. ' ' .. name .. ' */',
+				'#endif /* ' .. real_g .. ' ' .. name .. ' #else */'
+			})
+		else
+			vim.fn.append(line_b, {
+				'#endif /* ' .. real_g .. ' ' .. name .. ' */'
+			})
+		end
 	
 		vim.fn.append(line_a - 1, {
-			real_guard .. ' ' .. label
+			real_g .. ' ' .. name
 		})
 	
 		-- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
 	end
 end
 
-vim.keymap.set('n', ',ifd', ifdef_mode_normal('#ifdef'), { silent = true })
-vim.keymap.set('x', ',ifd', ifdef_mode_visual('#ifdef'), { silent = true })
+-- #ifdef (normal)
+vim.keymap.set(
+	'n',
+	',ifd',
+	ifdef_mode_normal('#ifdef', false),
+	{ silent = true }
+)
 
-vim.keymap.set('n', ',ifnd', ifdef_mode_normal('#ifndef'), { silent = true })
-vim.keymap.set('x', ',ifnd', ifdef_mode_visual('#ifndef'), { silent = true })
+-- #ifdef #else (normal)
+vim.keymap.set(
+	'n',
+	',ifed',
+	ifdef_mode_normal('#ifdef', true),
+	{ silent = true }
+)
+
+-- #ifdef (visual)
+vim.keymap.set(
+	'x',
+	',ifd',
+	ifdef_mode_visual('#ifdef', false),
+	{ silent = true }
+)
+
+-- #ifdef #else (visual)
+vim.keymap.set(
+	'x',
+	',ifed',
+	ifdef_mode_visual('#ifdef', true),
+	{ silent = true }
+)
+
+-- #ifndef (normal)
+vim.keymap.set(
+	'n',
+	',ifnd',
+	ifdef_mode_normal('#ifndef', false),
+	{ silent = true }
+)
+
+-- #ifndef #else (normal)
+vim.keymap.set(
+	'n',
+	',ifned',
+	ifdef_mode_normal('#ifndef', true),
+	{ silent = true }
+)
+
+-- #ifndef (visual)
+vim.keymap.set(
+	'x',
+	',ifnd',
+	ifdef_mode_visual('#ifndef', false),
+	{ silent = true }
+)
+
+-- #ifndef #else (visual)
+vim.keymap.set(
+	'x',
+	',ifned',
+	ifdef_mode_visual('#ifndef', true),
+	{ silent = true }
+)
 
 -- Encase the current line in a comment block
 vim.keymap.set('n', ',ec', function()
@@ -188,131 +411,10 @@ vim.keymap.set('x', ',ec', function()
 	)
 end, { noremap = true, silent = true })
 
--- Pragma warning diagnostics for GCC
-vim.keymap.set('n', ',pgcc', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_gcc')
-	vim.cmd('read ' .. file)
-	vim.api.nvim_feedkeys('j$i', 'n', false)
-end, { noremap = true, silent = true })
+-----------------------------------------------------------------------
+-- FORMATTING THE CURRENT FILE AND RETURNING TO THE CURSOR POSITION! --
+-----------------------------------------------------------------------
 
--- Pragma warning diagnostics for clang
-vim.keymap.set('n', ',pcla', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/pragma_clang')
-	vim.cmd('read ' .. file)
-	vim.api.nvim_feedkeys('j$i', 'n', false)
-end, { noremap = true, silent = true })
-
--- Just a simple hello world program in C
-vim.keymap.set('n', ',hello', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/hello_world')
-	vim.cmd("read " .. file)
-end, { noremap = true, silent = true })
-
--- Debug macro for a specific module
-vim.keymap.set('n', ',dbm', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/debug_macro')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
---------------------------------------------------
--- SNIPPETS FOR INCLUDE HEADER SECTION COMMENTS --
---------------------------------------------------
-
--- Includes
-vim.keymap.set('n', ',iinc', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_includes')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Defines
-vim.keymap.set('n', ',idef', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_defines')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Macros
-vim.keymap.set('n', ',imac', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_macros')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Enums
-vim.keymap.set('n', ',ienu', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_enums')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Typedefs
-vim.keymap.set('n', ',ityp', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_typedefs')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Structures
-vim.keymap.set('n', ',istru', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_structs')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- External Variables
-vim.keymap.set('n', ',ivex', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_var_ext')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Static Variables
-vim.keymap.set('n', ',ivst', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_var_stat')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Function Declarations
-vim.keymap.set('n', ',ifun', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_functions')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Inline Functions
-vim.keymap.set('n', ',iinl', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/inc_func_inl')
-	vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
---------------------
--- OTHER SNIPPETS --
---------------------
-
--- Include setup
-vim.keymap.set('n', ',inc', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/include_setup')
-	vim.cmd('read ' .. file)
-	vim.api.nvim_feedkeys('$hhi', 'n', false)
-end, { noremap = true, silent = true })
---
--- Include setup (with brackets, instead)
-vim.keymap.set('n', ',binc', function()
-	local file = vim.fn.expand('$HOME/.config/nvim/snippets/include_setupb')
-	vim.cmd('read ' .. file)
-	vim.api.nvim_feedkeys('$hhi', 'n', false)
-end, { noremap = true, silent = true })
-
--- Generating CTags for code --
-vim.api.nvim_create_user_command('MakeTags', function()
-	if 0 == vim.fn.executable('ctags') then
-		vim.notify("ERROR: `ctags` is not an executable " ..
-			   "on this system. Please install it via " ..
-			   "your distro's package manager!",
-			   vim.log.levels.ERROR);
-		return;
-	end
-	
-	vim.fn.jobstart({'ctags', '-R', '.'}, {
-  on_exit = function(_, code) if 0 ~= code then vim.notify(
-      "ERROR: Failed to generate CTags!", vim.log.levels.ERROR) end end
-	})
-end, {})
-
--- Formatting the current file and returning to the cursor position! --
 vim.api.nvim_create_user_command('FormatFileWithClang', function()
 	if 0 == vim.fn.executable('clang-format') then
 		vim.notify("ERROR: `clang-format` not found on system! " ..
@@ -337,9 +439,9 @@ vim.api.nvim_create_user_command('FormatFileWithClang', function()
 end, {})
 
 -- Lines & Numbers --
-vim.opt.number         = true
+vim.opt.number	 = true
 vim.opt.relativenumber = true
-vim.opt.wrap           = true
+vim.opt.wrap	   = true
 
 -- Tabs --
 vim.opt.expandtab   = false
@@ -356,21 +458,21 @@ vim.opt.colorcolumn = '80'
 
 -- Diagnostics --
 vim.diagnostic.config({
-        virtual_text = false,
-        signs        = true,
-        underline    = true,
-        float = { border = 'rounded', focusable = false }
+	virtual_text = false,
+	signs	= true,
+	underline    = true,
+	float = { border = 'rounded', focusable = false }
 })
 
 vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-        pattern  = '*',
-        callback = function()
-                vim.diagnostic.open_float(nil, { focus = false })
-        end
+	pattern  = '*',
+	callback = function()
+		vim.diagnostic.open_float(nil, { focus = false })
+	end
 })
 
 vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", {
-        noremap = true, silent = true
+	noremap = true, silent = true
 })
 
 -- Etc --
