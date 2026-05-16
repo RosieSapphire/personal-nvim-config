@@ -380,6 +380,14 @@ vim.keymap.set('n', ',ec', function()
 	)
 end, { noremap = true, silent = true })
 
+-- Un-encase the current line from a comment block
+vim.keymap.set('n', ',uc', function()
+	local line = vim.api.nvim_get_current_line()
+	local ucom = line:gsub('^(%s*)/%*%s?(.-)%s?%*/$', '%1%2')
+
+	vim.api.nvim_set_current_line(ucom)
+end, { noremap = true, silent = true })
+
 -- Encase an entire visual block with a comment
 vim.keymap.set('x', ',ec', function()
 	local line_a = vim.fn.line('v')
