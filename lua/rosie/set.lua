@@ -433,7 +433,10 @@ vim.api.nvim_create_user_command('FormatFileWithClang', function()
 
 	local view      = vim.fn.winsaveview()
 	local lines     = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-	local formatted = vim.fn.systemlist('clang-format 2>&1', lines)
+	local formatted = vim.fn.systemlist(
+		'clang-format --assume-filename=file.c --style=file --fallback-style=none 2>&1',
+		lines
+	)
 
 	if 0 ~= vim.v.shell_error then
 		vim.notify(table.concat(formatted, vim.log.levels.ERROR))
