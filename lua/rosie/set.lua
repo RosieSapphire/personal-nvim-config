@@ -433,12 +433,10 @@ vim.api.nvim_create_user_command('FormatFileWithClang', function()
 
 	local view      = vim.fn.winsaveview()
 	local lines     = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-	local formatted = vim.fn.systemlist('clang-format', lines)
+	local formatted = vim.fn.systemlist('clang-format 2>&1', lines)
 
 	if 0 ~= vim.v.shell_error then
-		vim.notify("ERROR: Failed to format the " ..
-			   "current file using `clang-format`!",
-			   vim.log.levels.ERROR)
+		vim.notify(table.concat(formatted, vim.log.levels.ERROR))
 		return
 	end
 
