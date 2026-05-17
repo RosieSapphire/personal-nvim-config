@@ -115,6 +115,9 @@ vim.keymap.set('n', '<leader>ls', function() vim.cmd('ls') end)
 vim.keymap.set('n', '<leader>qfo', function() vim.cmd('copen') end)
 vim.keymap.set('n', '<leader>qfc', function() vim.cmd('cclose') end)
 
+-- Save the current buffer to its' respective file
+vim.keymap.set('n', '<leader>w', function() vim.cmd('write') end)
+
 -- Check the make command
 vim.keymap.set('n', '<leader>cmk', function()
         vim.cmd('set makeprg?')
