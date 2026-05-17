@@ -183,7 +183,7 @@ vim.keymap.set('n', ',cvarpr', function()
 end, { noremap = true, silent = true })
 
 -- Generating CTags for code --
-vim.api.nvim_create_user_command('MakeTags', function()
+vim.api.nvim_create_user_command('TagsMake', function()
 	if 0 == vim.fn.executable('ctags') then
 		vim.notify("ERROR: `ctags` is not an executable " ..
 			   "on this system. Please install it via " ..
