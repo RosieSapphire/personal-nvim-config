@@ -571,16 +571,7 @@ end, { noremap = true, silent = true })
 -----------------------------------------------------------------------
 -- FORMATTING THE CURRENT FILE AND RETURNING TO THE CURSOR POSITION! --
 -----------------------------------------------------------------------
-
-vim.api.nvim_create_user_command('FormatFileWithClang', function()
-        --------------------------------------------------------------------
-        -- FIXME: I want to have it so that if the post-format file is    --
-        --        identical to the input, it doesn't change the buffer,   --
-        --        indicated by the `[+]` at the end of the file. This way --
-        --        it's easier to know if I *actually* changed the file    --
-        --        with formatting or not, causing less confusion.         --
-        --------------------------------------------------------------------
-
+vim.keymap.set('n', '<leader>fr', function()
         -- Make sure we actually *have* clang-format, or we're fucked. lol
         if 0 == vim.fn.executable('clang-format') then
                 vim.notify("ERROR: `clang-format` not found on system! " ..
@@ -589,11 +580,11 @@ vim.api.nvim_create_user_command('FormatFileWithClang', function()
                 return
         end
 
-        -- Save the previous window position, 'cuz shit's gonna move around
-        local view      = vim.fn.winsaveview()
+        -- Save the previous cursor position, 'cuz shit's gonna move around
+        local cursor_pos = vim.api.nvim_win_get_cursor(0)
 
         -- Get all the lines in the file
-        local lines     = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 
         -- Perform the clang-format shenanigans on them
         local formatted = vim.fn.systemlist(
@@ -603,24 +594,26 @@ vim.api.nvim_create_user_command('FormatFileWithClang', function()
 
         -- Make sure it actually ran successfully, otherwise print an error
         if 0 ~= vim.v.shell_error then
-                vim.notify(table.concat(formatted, vim.log.levels.ERROR))
+                vim.notify(table.concat(formatted, '\n'), vim.log.levels.ERROR)
                 return
         end
 
-        --[[
-        vim.api.nvim_buf_set_lines(0, 0, -1, false, formatted)
-        ]]--
         -- Make sure that we don't modify it if it hasn't changed.
         -- This makes it much easier to know when we actually updated.
-        if vim.deep_equal(lines, formatted) then
+        local og_text = table.concat(lines, '\n'):gsub('%s+$', '')
+        local new_text = table.concat(formatted, '\n'):gsub('%s+$', '')
+        if og_text == new_text then
                 vim.notify('No changes to file after formatting.', vim.log.levels.INFO)
                 return
         end
 
+        -- Put the new data for the current buffer
+        vim.api.nvim_buf_set_lines(0, 0, -1, false, formatted)
+
         -- Now restore our previous window view
         -- so it looks like nothing happened!
-        vim.fn.winrestview(view)
-end, {})
+        vim.api.nvim_win_set_cursor(0, cursor_pos)
+end)
 
 -- Lines & Numbers --
 vim.opt.number         = true
