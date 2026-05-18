@@ -37,8 +37,9 @@ local function grep_find_normal(opts)
 end
 
 --------------------------------------------------------------------------------
--- FIXME: This is broken, so I removed it. I wanna add it eventually tho. qwq --
+-- FIXME: This is broken, so I disabled it. I wanna add it eventually tho. :c --
 --------------------------------------------------------------------------------
+
 --[[
 local function get_visual_selection()
         local line_a = vim.fn.line("'<")
@@ -107,13 +108,123 @@ vim.keymap.set('v', '<leader>*ic', function() grep_find_visual({ pattern = '**/*
 vim.keymap.set('v', '<leader>*ia', function() grep_find_visual({ pattern = '**/*.{c,h}', imprecise = true }) end)
 ]]--
 
+-- Overwrite hte original quickfix formatting so I can make it look less shitty
+function _G.quickfix_custom_format(info)
+        local qflist = vim.fn.getqflist({ id = info.id, items = 0, title = 0 })
+        local lines = {}
+
+        if qflist.title ~= 'Buffers' then
+                return nil
+        end
+
+        for i = info.start_idx, info.end_idx do
+                local item = qflist.items[i]
+
+                local long_name = vim.api.nvim_buf_get_name(item.bufnr)
+                if long_name == '' then
+                        long_name = '[No Name]'
+                end
+
+                local formatted
+                local short_name = long_name
+                vim.notify(short_name, vim.log.levels.WARN)
+                if short_name == 'bash' then
+                        short_name = '[Terminal]'
+                end
+
+                if long_name ~= '[No Name]' then
+                        short_name = vim.fn.fnamemodify(short_name, ':t')
+                        if short_name == 'bash' then
+                                short_name = '[TERMINAL]'
+                        end
+                        formatted = string.format(
+                                '%d: \"%s\" [ln: %d | abs: %s]',
+                                item.bufnr,
+                                short_name,
+                                item.lnum,
+                                long_name
+                        )
+                else
+                        formatted = string.format(
+                                '%d: %s',
+                                item.bufnr,
+                                long_name -- Should just be '[No Name]'. lel
+                        )
+                end
+
+                table.insert(lines, formatted)
+        end
+
+        return lines
+end
+
+vim.o.quickfixtextfunc = '{info -> v:lua.quickfix_custom_format(info)}'
+
 -- Handy-dandy mouse-ka-tool for listing buffers so I don't have to press
 -- an extra fucking key. Such is the way of VIM after all, right? lmao
-vim.keymap.set('n', '<leader>ls', function() vim.cmd('ls') end)
+vim.keymap.set('n', '<leader>ls', function()
+        local qf = {}
+
+        for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+                ------------------------------------------------------------
+                -- FIXME: This indentation is ugly and I'd like to invert --
+                --        the conditional statement to be prettier. qwq   --
+                ------------------------------------------------------------
+                if 0 ~= vim.fn.buflisted(bufnr) then
+                        -- Get the name of the buffer from the number
+                        local name = vim.fn.fnamemodify(
+                                vim.api.nvim_buf_get_name(bufnr),
+                                ':t'
+                        )
+
+                        -- If the file has no name, make sure we can see it. lol
+                        if '' == name then
+                                name = '[No Name]'
+                        end
+
+                        -- Get the line we were on upon this buffers last access
+                        local line = vim.api.nvim_buf_get_mark(bufnr, '"')[1]
+
+                        -- Make sure we didn't somehow get a fucked up line num
+                        if 0 == line then
+                                line = 1
+                        end
+
+                        -- Add this element to the Quickfix buffer! Make sure
+                        -- that when we open it, it puts us on the same line
+                        -- we were on when we last accessed it! :D
+                        table.insert(qf, {
+                                bufnr = bufnr,
+                                lnum  = line,
+                                col   = 1,
+                                text  = name
+                        })
+                end
+        end
+
+        vim.fn.setqflist({}, 'r', { title = 'Buffers', items = qf })
+        vim.cmd('copen')
+end, { desc = 'List currently opened buffers in quickfix' })
+
+----------------------------------------------------------
+-- TODO: I REALLY fucking want a rename variable macro! --
+----------------------------------------------------------
 
 -- And another one for opening and closing the quick-fix panel faster!
-vim.keymap.set('n', '<leader>qfo', function() vim.cmd('copen') end)
-vim.keymap.set('n', '<leader>qfc', function() vim.cmd('cclose') end)
+vim.keymap.set('n', '<leader>qo', function() vim.cmd('copen') end)
+vim.keymap.set('n', '<leader>qc', function() vim.cmd('cclose') end)
+
+-- Sourcing the current file
+vim.keymap.set('n', '<leader>so', function() vim.cmd('source|:f') end)
+
+----------------------------------------
+-- TODO: Make this work properly. lol --
+----------------------------------------
+
+--[[
+-- Going to help page for what's currently under the cursor
+vim.keymap.set('n', '<leader>gh', function() vim.cmd('help|<cword>') end)
+]]--
 
 -----------------------------------------------------------------------
 -- FORMATTING THE CURRENT FILE AND RETURNING TO THE CURSOR POSITION! --
@@ -166,6 +277,9 @@ vim.keymap.set('n', '<leader>fr', function() clang_format_current_buffer() end)
 
 -- Save the current buffer to a file
 vim.keymap.set('n', '<leader>w', function() vim.cmd('write') end)
+
+-- Shut down the current buffer
+vim.keymap.set('n', '<leader>bd', function() vim.cmd('bd!') end)
 
 -- Save the current buffer to a file right after formatting it with clang! :D
 vim.keymap.set('n', '<leader>fw', function()
