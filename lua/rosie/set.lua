@@ -127,7 +127,6 @@ function _G.quickfix_custom_format(info)
 
                 local formatted
                 local short_name = long_name
-                vim.notify(short_name, vim.log.levels.WARN)
                 if short_name == 'bash' then
                         short_name = '[Terminal]'
                 end
@@ -756,7 +755,7 @@ vim.opt.autoindent  = true
 -- Columns --
 vim.opt.scrolloff   = 8
 vim.opt.signcolumn  = 'yes' -- Figure out what this does
-vim.opt.colorcolumn = '80'
+vim.opt.colorcolumn = '78'
 
 -- Diagnostics --
 vim.diagnostic.config({
