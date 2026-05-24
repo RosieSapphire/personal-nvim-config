@@ -5,15 +5,6 @@
 vim.opt.path:append("**")
 vim.opt.wildmenu = true
 
---------------------------------------------------------------------------------
--- FIXME: I tried to use regular grep a few times, but it doesn't fucken work --
---------------------------------------------------------------------------------
-
---[[
-vim.opt.grepprg = 'rg --vimgrep --smart-case'
-vim.opt.grepformat = '%f:%l:%c:%m'
-]]--
-
 -- Function for finding stuff with grep (normal mode)
 local function grep_find_normal(opts)
         opts = opts or {}
@@ -689,26 +680,132 @@ vim.keymap.set(
         { silent = true }
 )
 
--- Encase the current line in a comment block
-vim.keymap.set('n', ',ec', function()
-        local line    = vim.api.nvim_get_current_line()
-        local indent  = line:match('^%s*')
+local function escape_lua_pattern(str)
+        return str:gsub('([^%w])', '%%%1')
+end
+
+local function encase_current_line(left, right)
+        local line = vim.api.nvim_get_current_line()
+
+        local indent  = line:match('^%s*') or ''
         local content = line:sub(#indent + 1)
 
         vim.api.nvim_set_current_line(
-                indent .. '/* ' .. content .. ' */'
+                indent .. left .. content .. right
         )
-end, { noremap = true, silent = true })
+end
 
--- Un-encase the current line from a comment block
-vim.keymap.set('n', ',uc', function()
+local function encase_visual_select(left, right)
+        local pos_a = vim.fn.getpos("'<")
+        local pos_b = vim.fn.getpos("'>")
+
+        if pos_a[2] ~= pos_b[2] then
+                return
+        end
+
+        local row = pos_a[2]
+
+        local col_a = pos_a[3]
+        local col_b = pos_b[3]
+
+        if col_a > col_b then
+                col_a, col_b = col_b, col_a
+        end
+
+        local line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
+
+        local before   = line:sub(1, col_a - 1)
+        local selected = line:sub(col_a, col_b)
+        local after    = line:sub(col_b + 1)
+
+        local updated = before .. left .. selected .. right .. after
+
+        vim.api.nvim_buf_set_lines(0, row - 1, row, false, { updated })
+end
+
+local function unencase_visual_select(left, right)
+        local pos_a = vim.fn.getpos("'<")
+        local pos_b = vim.fn.getpos("'>")
+
+        if pos_a[2] ~= pos_b[2] then
+                return
+        end
+
+        local row = pos_a[2]
+
+        local col_a = pos_a[3]
+        local col_b = pos_b[3]
+
+        if col_a > col_b then
+                col_a, col_b = col_b, col_a
+        end
+
+        local line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
+
+        local len_left  = #left
+        local len_right = #right
+
+        local real_left  = line:sub(col_a - len_left, col_a - 1)
+        local real_right = line:sub(col_b + 1, col_b + len_right)
+
+        -- Verify wrappers actually exist
+        if real_left ~= left or real_right ~= right then
+                return
+        end
+
+        local before = line:sub(1, col_a - len_left - 1)
+        local middle = line:sub(col_a, col_b)
+        local after  = line:sub(col_b + len_right + 1)
+
+        local updated = before .. middle .. after
+
+        vim.api.nvim_buf_set_lines(0, row - 1, row, false, { updated })
+end
+
+local function unencase_current_line(left, right)
         local line = vim.api.nvim_get_current_line()
-        local ucom = line:gsub('^(%s*)/%*%s?(.-)%s?%*/$', '%1%2')
 
-        vim.api.nvim_set_current_line(ucom)
+        local pat_left  = escape_lua_pattern(left)
+        local pat_right = escape_lua_pattern(right)
+
+        local pattern = '^(%s*)' .. pat_left .. '(.-)' .. pat_right .. '%s*$'
+
+        local updated = line:gsub(pattern, '%1%2')
+
+        vim.api.nvim_set_current_line(updated)
+end
+
+---------------------------------
+-- ENCASING FUNCTIONS (NORMAL) --
+---------------------------------
+
+-- Comment
+vim.keymap.set('n', ',ec', function()
+        encase_current_line('/* ', ' */')
+end, { silent = true })
+
+-- Parenthesis
+vim.keymap.set('n', ',ep', function()
+        encase_current_line('(', ')')
+end, { silent = true })
+
+----------------------------------
+-- UN-ENCASE FUNCTIONS (NORMAL) --
+----------------------------------
+
+vim.keymap.set('n', ',uc', function()
+        unencase_current_line('/* ', ' */')
 end, { noremap = true, silent = true })
 
--- Encase an entire visual block with a comment
+vim.keymap.set('n', ',up', function()
+        unencase_current_line('(', ')')
+end, { noremap = true, silent = true })
+
+---------------------------------
+-- ENCASING FUNCTIONS (VISUAL) --
+---------------------------------
+
+-- Comment
 vim.keymap.set('x', ',ec', function()
         local line_a = vim.fn.line('v')
         local line_b = vim.fn.line('.')
@@ -737,6 +834,48 @@ vim.keymap.set('x', ',ec', function()
                 'n',
                 false
         )
+end, { noremap = true, silent = true })
+
+-------------------------------
+-- PARTIAL ENCASING (VISUAL) --
+-------------------------------
+
+--[[
+vim.keymap.set('x', ',ec', function()
+        vim.api.nvim_input('<Esc>')
+
+        vim.schedule(function()
+                encase_visual_select('/* ', ' */')
+        end)
+end, { noremap = true, silent = true })
+]]--
+
+vim.keymap.set('x', ',ep', function()
+        vim.api.nvim_input('<Esc>')
+
+        vim.schedule(function()
+                encase_visual_select('(', ')')
+        end)
+end, { noremap = true, silent = true })
+
+---------------------------------
+-- PARTIAL UNENCASING (VISUAL) --
+---------------------------------
+
+vim.keymap.set('x', ',uc', function()
+        vim.api.nvim_input('<Esc>')
+
+        vim.schedule(function()
+                unencase_visual_select('/* ', ' */')
+        end)
+end, { noremap = true, silent = true })
+
+vim.keymap.set('x', ',up', function()
+        vim.api.nvim_input('<Esc>')
+
+        vim.schedule(function()
+                unencase_visual_select('(', ')')
+        end)
 end, { noremap = true, silent = true })
 
 -- Lines & Numbers --
