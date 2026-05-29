@@ -396,89 +396,28 @@ end, { noremap = true, silent = true })
 -- SNIPPETS FOR INCLUDE HEADER AND SOURCE SECTION COMMENTS --
 -------------------------------------------------------------
 
--- Defines
-vim.keymap.set('n', ',cdef', function()
-        local file = vim.fn.expand(snip_dir .. 'com/defines')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
+local function snippet_bind_create(keybind, path)
+        vim.keymap.set('n', keybind, function()
+                local file = vim.fn.expand(path)
+                vim.cmd('read ' .. file)
+        end, { noremap = true, silent = true })
+end
 
--- Enums
-vim.keymap.set('n', ',cenu', function()
-        local file = vim.fn.expand(snip_dir .. 'com/enums')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Inline Functions
-vim.keymap.set('n', ',cfuni', function()
-        local file = vim.fn.expand(snip_dir .. 'com/func_inl')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Private Function Prototypes
-vim.keymap.set('n', ',cfunprp', function()
-        local file = vim.fn.expand(snip_dir .. 'com/func_prv_pro')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Private Function Implementations
-vim.keymap.set('n', ',cfunpri', function()
-        local file = vim.fn.expand(snip_dir .. 'com/func_prv_imp')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Public Function Prototypes
-vim.keymap.set('n', ',cfunpup', function()
-        local file = vim.fn.expand(snip_dir .. 'com/func_pub_pro')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Public Function Definitions
-vim.keymap.set('n', ',cfunpui', function()
-        local file = vim.fn.expand(snip_dir .. 'com/func_pub_imp')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Include Headers
-vim.keymap.set('n', ',cinc', function()
-        local file = vim.fn.expand(snip_dir .. 'com/include')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Macros
-vim.keymap.set('n', ',cmac', function()
-        local file = vim.fn.expand(snip_dir .. 'com/macros')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Structures
-vim.keymap.set('n', ',cstru', function()
-        local file = vim.fn.expand(snip_dir .. 'com/structs')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Typedefs
-vim.keymap.set('n', ',ctyp', function()
-        local file = vim.fn.expand(snip_dir .. 'com/typedefs')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Public Variable Prototypes
-vim.keymap.set('n', ',cvarpup', function()
-        local file = vim.fn.expand(snip_dir .. 'com/var_pub_dec')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Public Variable Implementations
-vim.keymap.set('n', ',cvarpui', function()
-        local file = vim.fn.expand(snip_dir .. 'com/var_pub_imp')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
--- Private Variables
-vim.keymap.set('n', ',cvarpr', function()
-        local file = vim.fn.expand(snip_dir .. 'com/var_prv')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
+snippet_bind_create(',cmain', snip_dir .. 'com/main')
+snippet_bind_create(',cdef', snip_dir .. 'com/defines')
+snippet_bind_create(',cenu', snip_dir .. 'com/enums')
+snippet_bind_create(',cfuni', snip_dir .. 'com/func_inl')
+snippet_bind_create(',cfunprp', snip_dir .. 'com/func_prv_pro')
+snippet_bind_create(',cfunpri', snip_dir .. 'com/func_prv_imp')
+snippet_bind_create(',cfunpup', snip_dir .. 'com/func_pub_pro')
+snippet_bind_create(',cfunpui', snip_dir .. 'com/func_pub_imp')
+snippet_bind_create(',cinc', snip_dir .. 'com/include')
+snippet_bind_create(',cmac', snip_dir .. 'com/macros')
+snippet_bind_create(',cstru', snip_dir .. 'com/structs')
+snippet_bind_create(',ctyp', snip_dir .. 'com/typedefs')
+snippet_bind_create(',cvarpup', snip_dir .. 'com/var_pub_dec')
+snippet_bind_create(',cvarpui', snip_dir .. 'com/var_pub_imp')
+snippet_bind_create(',cvarpr', snip_dir .. 'com/var_prv')
 
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('TagsMake', function()
