@@ -1,3 +1,17 @@
+--------------------------------------------------------------------------
+-- MAKE SURE THAT FISH IS USED, AND IF WE DON'T HAVE IT, FORCE US TO!!! --
+--------------------------------------------------------------------------
+
+local fish_prog = vim.fn.exepath('fish')
+
+if fish_prog ~= '' then
+        vim.opt.shell = fish_prog
+        vim.opt.shellcmdflag = '-c'
+else
+        vim.notify('\n\nERROR: Fish terminal required, fuck you. `sudo apt install fish` if you\'re on a Debian-based distro. NO BASH ALLOWED!\n', vim.log.levels.ERROR)
+        return
+end
+
 --------------------------------------
 -- MACROS FOR BETTER PATH SEARCHING --
 --------------------------------------
