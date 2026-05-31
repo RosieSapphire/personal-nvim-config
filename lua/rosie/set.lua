@@ -89,16 +89,6 @@ vim.keymap.set('n', '<leader>*ih', function() grep_find_normal({ pattern = '**/*
 vim.keymap.set('n', '<leader>*ic', function() grep_find_normal({ pattern = '**/*.c', imprecise = true }) end)
 vim.keymap.set('n', '<leader>*ia', function() grep_find_normal({ pattern = '**/*.{c,h}', imprecise = true }) end)
 
---[[
--- Keybinds for finding a pattern in a file (visual)
-vim.keymap.set('v', '<leader>*h', function() grep_find_visual({ pattern = '**/*.h', imprecise = false }) end)
-vim.keymap.set('v', '<leader>*c', function() grep_find_visual({ pattern = '**/*.c', imprecise = false }) end)
-vim.keymap.set('v', '<leader>*a', function() grep_find_visual({ pattern = '**/*.{c,h}', imprecise = false }) end)
-vim.keymap.set('v', '<leader>*ih', function() grep_find_visual({ pattern = '**/*.h', imprecise = true }) end)
-vim.keymap.set('v', '<leader>*ic', function() grep_find_visual({ pattern = '**/*.c', imprecise = true }) end)
-vim.keymap.set('v', '<leader>*ia', function() grep_find_visual({ pattern = '**/*.{c,h}', imprecise = true }) end)
-]]--
-
 -- Overwrite hte original quickfix formatting so I can make it look less shitty
 function _G.quickfix_custom_format(info)
         local qflist = vim.fn.getqflist({ id = info.id, items = 0, title = 0 })
@@ -419,6 +409,12 @@ snippet_bind_create(',cvarpup', snip_dir .. 'com/var_pub_dec')
 snippet_bind_create(',cvarpui', snip_dir .. 'com/var_pub_imp')
 snippet_bind_create(',cvarpr', snip_dir .. 'com/var_prv')
 
+-- Main Function
+vim.keymap.set('n', ',cmain', function()
+        local file = vim.fn.expand(snip_dir .. 'com/main')
+        vim.cmd('read ' .. file)
+end, { noremap = true, silent = true })
+
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('TagsMake', function()
         if 0 == vim.fn.executable('ctags') then
@@ -439,6 +435,64 @@ end, {})
 ----------------------------------
 -- SNIPPETS FOR CODE GENERATION --
 ----------------------------------
+
+--------------
+-- Comments --
+--------------
+
+local function comment_generate(prefix, is_inline)
+        -- Get the indentation level at the current line
+        local line   = vim.api.nvim_get_current_line()
+        local indent = line:match('^%s*') or ''
+        local pfx    = prefix or ''
+
+        -- Append the comment block skeleton to the lines above us
+        -- (with the correct indentation-level of course!)
+        if is_inline then
+                local crs  = vim.api.nvim_win_get_cursor(0)
+                local row  = crs[1]
+                local prow = row - 1
+                local text = indent .. '/* ' .. pfx .. ' */'
+
+                -- Inline comment
+                vim.api.nvim_buf_set_lines(0, prow, prow, false, { text })
+                vim.api.nvim_win_set_cursor(0, { row, #text - 3 })
+                vim.cmd('startinsert')
+        else
+                -- Block comment
+                local crs  = vim.api.nvim_win_get_cursor(0)
+                local row  = crs[1]
+                local prow = row - 1
+
+                vim.api.nvim_buf_set_lines(0, prow, prow, false, {
+                        indent .. '/*',
+                        indent .. ' * ' .. pfx,
+                        indent .. ' */'
+                })
+                vim.api.nvim_win_set_cursor(0, {
+                        row + 1,
+                        #indent + 3 + #pfx
+                })
+                vim.cmd('startinsert!')
+        end
+end
+
+local function comment_generate_mapper(mapping, prefix, is_inline)
+        vim.keymap.set('n', mapping, function()
+                comment_generate(prefix, is_inline)
+        end, { noremap = true, silent = true })
+end
+
+comment_generate_mapper(',cbe', '', false)
+comment_generate_mapper(',cbt', 'TODO: ', false)
+comment_generate_mapper(',cbf', 'FIXME: ', false)
+comment_generate_mapper(',cie', '', true)
+comment_generate_mapper(',cit', 'TODO: ', true)
+comment_generate_mapper(',cif', 'FIXME: ', true)
+
+----------------------------------------------------------------------------
+-- TODO: Create mapper functions for all these too so they clean as FUCK! --
+----------------------------------------------------------------------------
 
 -- Include setup with quotation marks
 vim.keymap.set('n', ',inc', function()
@@ -555,69 +609,32 @@ local function ifdef_mode_visual(guard, do_else)
         end
 end
 
--- #ifdef (normal)
-vim.keymap.set(
-        'n',
-        ',ifd',
-        ifdef_mode_normal('#ifdef', false),
-        { silent = true }
-)
+local function ifdef_macro_mapper(mode, input, guard, do_else)
+        local func
 
--- #ifdef #else (normal)
-vim.keymap.set(
-        'n',
-        ',ifed',
-        ifdef_mode_normal('#ifdef', true),
-        { silent = true }
-)
+        if mode == 'n' then
+                func = ifdef_mode_normal
+        elseif mode == 'x' then
+                func = ifdef_mode_visual
+        end
 
--- #ifdef (visual)
-vim.keymap.set(
-        'x',
-        ',ifd',
-        ifdef_mode_visual('#ifdef', false),
-        { silent = true }
-)
+        vim.keymap.set(
+                mode,
+                input,
+                func(guard, do_else),
+                { silent = true }
+        )
+end
 
--- #ifdef #else (visual)
-vim.keymap.set(
-        'x',
-        ',ifed',
-        ifdef_mode_visual('#ifdef', true),
-        { silent = true }
-)
+ifdef_macro_mapper('n', ',ifd', '#ifdef', false)
+ifdef_macro_mapper('n', ',ifed', '#ifdef', true)
+ifdef_macro_mapper('n', ',ifnd', '#ifndef', false)
+ifdef_macro_mapper('n', ',ifned', '#ifndef', true)
 
--- #ifndef (normal)
-vim.keymap.set(
-        'n',
-        ',ifnd',
-        ifdef_mode_normal('#ifndef', false),
-        { silent = true }
-)
-
--- #ifndef #else (normal)
-vim.keymap.set(
-        'n',
-        ',ifned',
-        ifdef_mode_normal('#ifndef', true),
-        { silent = true }
-)
-
--- #ifndef (visual)
-vim.keymap.set(
-        'x',
-        ',ifnd',
-        ifdef_mode_visual('#ifndef', false),
-        { silent = true }
-)
-
--- #ifndef #else (visual)
-vim.keymap.set(
-        'x',
-        ',ifned',
-        ifdef_mode_visual('#ifndef', true),
-        { silent = true }
-)
+ifdef_macro_mapper('x', ',ifd', '#ifdef', false)
+ifdef_macro_mapper('x', ',ifed', '#ifdef', true)
+ifdef_macro_mapper('x', ',ifnd', '#ifndef', false)
+ifdef_macro_mapper('x', ',ifned', '#ifndef', true)
 
 local function escape_lua_pattern(str)
         return str:gsub('([^%w])', '%%%1')
@@ -778,16 +795,6 @@ end, { noremap = true, silent = true })
 -------------------------------
 -- PARTIAL ENCASING (VISUAL) --
 -------------------------------
-
---[[
-vim.keymap.set('x', ',ec', function()
-        vim.api.nvim_input('<Esc>')
-
-        vim.schedule(function()
-                encase_visual_select('/* ', ' */')
-        end)
-end, { noremap = true, silent = true })
-]]--
 
 vim.keymap.set('x', ',ep', function()
         vim.api.nvim_input('<Esc>')
