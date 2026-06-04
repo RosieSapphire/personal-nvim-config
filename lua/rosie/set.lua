@@ -35,10 +35,27 @@ local function grep_find_normal(opts)
         vim.cmd("normal! m'")
 
         -- Perform the fucken grep
-        vim.cmd('vimgrep /' .. word .. '/gj ' .. pattern)
+        vim.cmd('silent! vimgrep /' .. word .. '/gj ' .. pattern)
 
-        -- Open up the quickfix panel with the results
-        vim.cmd('copen')
+        -- Open up the quickfix panel with the results. If
+        -- there are no results, print a message saying so!
+        if not vim.tbl_isempty(vim.fn.getqflist()) then
+                -- This is the success condition!
+                vim.cmd('copen')
+                return
+        end
+
+        -- This is the "failure" (we couldn't find anything) condition! :D
+        local pat_labels = {
+                ['**/*.c']        = 'this directory\'s C Source files',
+                ['**/*.h']        = 'this directory\'s C Header files',
+                ['**/*.c **/*.h'] = 'this directory\'s C Source and Header files',
+        }
+
+        local fmt = 'No matches found for "%s" in %s'
+        local pat = pat_labels[pattern] or pattern
+
+        vim.notify(string.format(fmt, word, pat), vim.log.levels.INFO)
 end
 
 --------------------------------------------------------------------------------
@@ -98,7 +115,7 @@ end
 -- Keybinds for finding a pattern in a file (normal)
 vim.keymap.set('n', '<leader>*h', function() grep_find_normal({ pattern = '**/*.h', imprecise = false }) end)
 vim.keymap.set('n', '<leader>*c', function() grep_find_normal({ pattern = '**/*.c', imprecise = false }) end)
-vim.keymap.set('n', '<leader>*a', function() grep_find_normal({ pattern = '**/*.{c,h}', imprecise = false }) end)
+vim.keymap.set('n', '<leader>*a', function() grep_find_normal({ pattern = '**/*.c **/*.h', imprecise = false }) end)
 vim.keymap.set('n', '<leader>*ih', function() grep_find_normal({ pattern = '**/*.h', imprecise = true }) end)
 vim.keymap.set('n', '<leader>*ic', function() grep_find_normal({ pattern = '**/*.c', imprecise = true }) end)
 vim.keymap.set('n', '<leader>*ia', function() grep_find_normal({ pattern = '**/*.{c,h}', imprecise = true }) end)
@@ -271,9 +288,19 @@ local function clang_format_current_buffer()
         -- Put the new data for the current buffer
         vim.api.nvim_buf_set_lines(0, 0, -1, false, formatted)
 
-        -- Now restore our previous window view
-        -- so it looks like nothing happened!
-        vim.api.nvim_win_set_cursor(0, cursor_pos)
+        -- Now restore our previous window view so it looks like nothing
+        -- happened! But also make sure that it stays within the bounds of
+        -- the file. For example, if the file was formatted is of a shorter
+        -- length than the original and the cursor head happens to be at the
+        -- bottom of the file. This doesn't happen very often, but it's
+        -- extremely annoying when it does, so it's nice to just fix up! :D
+        local line_cnt_new = vim.api.nvim_buf_line_count(0)
+        local cursor_new   = {
+                math.min(cursor_pos[1], line_cnt_new),
+                cursor_pos[2]
+        }
+
+        vim.api.nvim_win_set_cursor(0, cursor_new)
 end
 
 vim.keymap.set('n', '<leader>fr', function() clang_format_current_buffer() end)
@@ -287,7 +314,9 @@ vim.keymap.set('n', '<leader>bd', function() vim.cmd('bd!') end)
 -- Save the current buffer to a file right after formatting it with clang! :D
 vim.keymap.set('n', '<leader>fw', function()
         clang_format_current_buffer()
-        vim.cmd('write')
+        if vim.bo.modified then
+                vim.cmd('write')
+        end
 end)
 
 -- Check the make command
