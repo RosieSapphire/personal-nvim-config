@@ -156,7 +156,7 @@ vim.o.quickfixtextfunc = '{info -> v:lua.quickfix_custom_format(info)}'
 
 -- Handy-dandy mouse-ka-tool for listing buffers so I don't have to press
 -- an extra fucking key. Such is the way of VIM after all, right? lmao
-vim.keymap.set('n', '<leader>ls', function()
+vim.keymap.set('n', '<C-e>', function()
         local qf = {}
 
         for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
