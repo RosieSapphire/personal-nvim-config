@@ -460,6 +460,7 @@ snippet_bind_create(',ctyp', snip_dir .. 'com/typedefs')
 snippet_bind_create(',cvarpup', snip_dir .. 'com/var_pub_dec')
 snippet_bind_create(',cvarpui', snip_dir .. 'com/var_pub_imp')
 snippet_bind_create(',cvarpr', snip_dir .. 'com/var_prv')
+snippet_bind_create(',bast', snip_dir .. 'basic_types')
 
 -- Main Function
 vim.keymap.set('n', ',cmain', function()
