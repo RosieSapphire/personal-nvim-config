@@ -29,8 +29,8 @@ local function git_keymap(cmd, func, desc)
         )
 end
 
-git_keymap('ac', git.add_current,    'add current file')
-git_keymap('aa', git.add_all,        'add all')
+git_keymap('ac', git.add_current,     'add current file')
+git_keymap('aa', git.add_all,         'add all')
 git_keymap('st', git.status,          'status')
 git_keymap('sh', git.show,            'show')
 git_keymap('t',  git.tracked,         'tracked files')
