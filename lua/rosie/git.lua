@@ -116,42 +116,98 @@ local function current_file()
         return vim.fn.fnamemodify(name, ':p')
 end
 
+local function status_char_name(c)
+        local names = {
+                ['M'] = 'modified',
+                ['A'] = 'added',
+                ['D'] = 'deleted',
+                ['R'] = 'renamed',
+                ['C'] = 'copied',
+                ['U'] = 'unmerged',
+                ['?'] = 'untracked',
+                ['!'] = 'ignored',
+        }
+
+        return names[c] or c
+end
+
+local function status_label(xy)
+        local x = xy:sub(1, 1)
+        local y = xy:sub(2, 2)
+
+        if xy == '??' then
+                return 'untracked'
+        end
+
+        if xy == '!!' then
+                return 'ignored'
+        end
+
+        local parts = {}
+
+        if x ~= ' ' then
+                table.insert(parts, 'staged: ' .. status_char_name(x))
+        end
+
+        if y ~= ' ' then
+                table.insert(parts, 'unstaged: ' .. status_char_name(y))
+        end
+
+        if #parts == 0 then
+                return 'clean'
+        end
+
+        return table.concat(parts, ', ')
+end
+
 local function status_items(stdout, root)
-        local raw = stdout:gsub('%z$', '')
+        local raw     = stdout:gsub('%z$', '')
         local records = vim.split(raw, '\0', { plain = true, trimempty = true })
-        local items = {}
+
+        local branch    = {}
+        local staged    = {}
+        local unstaged  = {}
+        local untracked = {}
+        local conflicted = {}
+
         local i = 1
 
         while i <= #records do
                 local rec = records[i]
 
                 if rec:sub(1, 2) == '##' then
-                        table.insert(items, {
+                        table.insert(branch, {
                                 text = rec,
                                 valid = 0,
                         })
                 else
-                        local xy = rec:sub(1, 2)
-                        local path = rec:sub(4)
-                        local text = xy .. ' ' .. path
+                        local xy       = rec:sub(1, 2)
+                        local x        = xy:sub(1, 1)
+                        local y        = xy:sub(2, 2)
+                        local path     = rec:sub(4)
                         local filename = path
+                        local label    = status_label(xy)
+                        local text     = string.format('%-28s %s', '[' .. label .. ']', path)
 
-                        -- In porcelain -z format, rename/copy records are:
-                        -- XY new-path\0old-path\0
                         if xy:find('[RC]') then
                                 local old = records[i + 1]
 
                                 if old then
-                                        text = xy .. ' ' .. old .. ' -> ' .. path
+                                        text = string.format(
+                                                '%-28s %s -> %s',
+                                                '[' .. label .. ']',
+                                                old,
+                                                path
+                                        )
+
                                         i = i + 1
                                 end
                         end
 
-                        local abs = root .. '/' .. filename
                         local deleted = xy:find('D') ~= nil
 
-                        table.insert(items, {
-                                filename = abs,
+                        local item = {
+                                filename = root .. '/' .. filename,
                                 lnum = 1,
                                 col = 1,
                                 text = text,
@@ -161,10 +217,49 @@ local function status_items(stdout, root)
                                         path = filename,
                                         status = xy,
                                 },
-                        })
+                        }
+
+                        if xy == '??' then
+                                table.insert(untracked, item)
+                        elseif xy:find('U') then
+                                table.insert(conflicted, item)
+                        elseif x ~= ' ' and y ~= ' ' then
+                                table.insert(staged, item)
+                                table.insert(unstaged, vim.tbl_extend('force', item, {
+                                        text = string.format('%-28s %s', '[also unstaged: ' .. status_char_name(y) .. ']', path),
+                                }))
+                        elseif x ~= ' ' then
+                                table.insert(staged, item)
+                        elseif y ~= ' ' then
+                                table.insert(unstaged, item)
+                        end
                 end
 
                 i = i + 1
+        end
+
+        local items = {}
+
+        vim.list_extend(items, branch)
+
+        if #conflicted > 0 then
+                table.insert(items, { text = '--- conflicted ---', valid = 0 })
+                vim.list_extend(items, conflicted)
+        end
+
+        if #staged > 0 then
+                table.insert(items, { text = '--- staged ---', valid = 0 })
+                vim.list_extend(items, staged)
+        end
+
+        if #unstaged > 0 then
+                table.insert(items, { text = '--- unstaged ---', valid = 0 })
+                vim.list_extend(items, unstaged)
+        end
+
+        if #untracked > 0 then
+                table.insert(items, { text = '--- untracked ---', valid = 0 })
+                vim.list_extend(items, untracked)
         end
 
         return items
