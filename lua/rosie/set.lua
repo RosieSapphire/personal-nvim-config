@@ -260,7 +260,7 @@ vim.keymap.set('n', '<leader>qo', function() vim.cmd('copen') end)
 vim.keymap.set('n', '<leader>qc', function() vim.cmd('cclose') end)
 
 -- Sourcing the current file
-vim.keymap.set('n', '<leader>so', function() vim.cmd('source|:f') end)
+vim.keymap.set('n', '<leader>so', function() vim.cmd('so') end)
 
 ----------------------------------------
 -- TODO: Make this work properly. lol --
