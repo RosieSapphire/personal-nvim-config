@@ -12,9 +12,9 @@ else
         return
 end
 
--------------------------
--- GIT STUFF INCLUDING --
--------------------------
+------------------
+-- GIT KEYBINDS --
+------------------
 
 local git = require('rosie.git')
 
