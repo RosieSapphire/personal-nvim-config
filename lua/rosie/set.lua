@@ -23,28 +23,26 @@ local function git_keymap(cmd, func, desc)
                 'n',
                 '<leader>g' .. cmd,
                 function()
-                        git.func()
+                        func()
                 end,
-                { desc = desc }
+                { desc = 'Git ' .. desc .. '.' }
         )
 end
 
-vim.keymap.set('n', '<leader>gs', function() git.status() end, { desc = 'Git status' })
-
-vim.keymap.set('n', '<leader>gt', function() git.tracked() end, { desc = 'Git tracked files' })
-vim.keymap.set('n', '<leader>gu', function() git.untracked() end, { desc = 'Git untracked files' })
-vim.keymap.set('n', '<leader>gaa', function() git.add_all() end, { desc = 'Git add all' })
-vim.keymap.set('n', '<leader>gaf', function() git.add_current() end, { desc = 'Git add current file' })
-vim.keymap.set('n', '<leader>gap', function() git.add_prompt() end, { desc = 'Git add path' })
-vim.keymap.set('n', '<leader>guf', function() git.unstage_current() end, { desc = 'Git unstage current file' })
-vim.keymap.set('n', '<leader>gd', function() git.diff() end, { desc = 'Git diff' })
-vim.keymap.set('n', '<leader>gD', function() git.diff_current() end, { desc = 'Git diff current file' })
-vim.keymap.set('n', '<leader>gdc', function() git.diff_cached() end, { desc = 'Git diff cached' })
-vim.keymap.set('n', '<leader>gl', function() git.log() end, { desc = 'Git log' })
-vim.keymap.set('n', '<leader>gL', function() git.log_current() end, { desc = 'Git log current file' })
-vim.keymap.set('n', '<leader>gS', function() git.show() end, { desc = 'Git show' })
-vim.keymap.set('n', '<leader>gb', function() git.blame_line() end, { desc = 'Git blame current line' })
-vim.keymap.set('n', '<leader>gc', function() git.commit_prompt() end, { desc = 'Git commit with message' })
+git_keymap('ac', git.add_current,    'add current file')
+git_keymap('aa', git.add_all,        'add all')
+git_keymap('st', git.status,          'status')
+git_keymap('sh', git.show,            'show')
+git_keymap('t',  git.tracked,         'tracked files')
+git_keymap('ut', git.untracked,       'untracked files')
+git_keymap('us', git.unstage_current, 'unstage current file')
+git_keymap('dc', git.diff_current,    'diff current file')
+git_keymap('da', git.diff,            'diff all')
+git_keymap('dC', git.diff_cached,     'diff cached')
+git_keymap('lc', git.log_current,     'log current file')
+git_keymap('la', git.log,             'log')
+git_keymap('bl', git.blame_line,      'blame current line')
+git_keymap('cm', git.commit_prompt,   'commit with message')
 
 --------------------------------------
 -- MACROS FOR BETTER PATH SEARCHING --
