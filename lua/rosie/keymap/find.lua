@@ -107,3 +107,15 @@ vim.keymap.set('n', '<C-e>', function()
         vim.fn.setqflist({}, 'r', { title = 'Buffers', items = qf })
         vim.cmd('copen')
 end, { desc = "List all open buffers in quickfix window." })
+
+vim.api.nvim_create_autocmd("FileType", {
+        pattern = "qf",
+        callback = function()
+                vim.keymap.set("n", "<CR>", function()
+                        local idx = vim.fn.line(".") -- current line in qf list
+                        vim.cmd("wincmd p")          -- go back to orig window
+                        vim.cmd("cc " .. idx)        -- jump to THAT entry
+                        vim.cmd("cclose")            -- close quickfix
+                end, { desc = "Open file in quickfix menu.", buffer = true })
+        end,
+})
