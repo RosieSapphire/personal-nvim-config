@@ -12,35 +12,6 @@ else
         return
 end
 
-------------------
--- GIT KEYBINDS --
-------------------
-
-local git = require('rosie.git')
-
-local function git_keymap(cmd, func, desc)
-        vim.keymap.set( 'n', '<leader>g' .. cmd, function()
-                func()
-        end, { desc = "Git " .. desc .. "." })
-end
-
-git_keymap('aa', git.add_all,         'add all')
-git_keymap('ac', git.add_current,     'add current file')
-git_keymap('ap', git.add_patch,       'add patch')
-git_keymap('bl', git.blame_line,      'blame current line')
-git_keymap('da', git.diff,            'diff all')
-git_keymap('dc', git.diff_current,    'diff current file')
-git_keymap('cm', git.commit_prompt,   'commit with message')
-git_keymap('dC', git.diff_cached,     'diff cached')
-git_keymap('lc', git.log_current,     'log current file')
-git_keymap('la', git.log,             'log')
-git_keymap('st', git.status,          'status')
-git_keymap('sh', git.show,            'show')
-git_keymap('up', git.unstage_patch,   'unstage patch')
-git_keymap('t',  git.tracked,         'tracked files')
-git_keymap('ut', git.untracked,       'untracked files')
-git_keymap('us', git.unstage_current, 'unstage current file')
-
 --------------------------------------
 -- MACROS FOR BETTER PATH SEARCHING --
 --------------------------------------
