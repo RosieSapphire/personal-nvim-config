@@ -24,8 +24,13 @@ vim.keymap.set('n', ',binc', function()
 end, { desc = "Generate #include angles.", noremap = true, silent = true })
 
 vim.keymap.set('n', ',hg', function()
-        local ok, guard = pcall(vim.fn.input, 'Header Guard Name: ')
-        local view      = vim.fn.winsaveview()
+        local ok, guard = pcall(
+                vim.fn.input,
+                'Header Guard Name: ',
+                'nothing'
+        )
+
+        local view = vim.fn.winsaveview()
 
         if not ok or guard == '' then
                 return
@@ -42,8 +47,13 @@ end, { desc = "Generate named header-guard.", noremap = true, silent = true })
 -- #ifdef & #ifndef with names
 local function ifdef_mode_normal(guard, do_else)
         return function()
-                local ok, name = pcall(vim.fn.input, guard .. ': ')
-                local real_g   = ''
+                local ok, name = pcall(
+                        vim.fn.input,
+                        guard .. ': ',
+                        'nothing'
+                )
+
+                local real_g = ''
 
                 if not ok or name == '' then
                         return
@@ -80,8 +90,13 @@ local function ifdef_mode_visual(guard, do_else)
         return function()
                 local line_a     = vim.fn.line('v')
                 local line_b     = vim.fn.line('.')
-                local ok, name   = pcall(vim.fn.input, guard .. ': ')
-                local real_g     = ''
+                local ok, name   = pcall(
+                        vim.fn.input,
+                        guard .. ': ',
+                        'nothing'
+                )
+
+                local real_g = ''
 
                 if not ok or name == '' then
                         return

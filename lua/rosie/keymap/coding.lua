@@ -11,7 +11,12 @@ vim.keymap.set('n', '<leader>cmk', function()
 end, { desc = "Print the currently set 'makeprg' command.", silent = true })
 
 vim.keymap.set('n', '<leader>smk', function()
-        local ok, mkprg = pcall(vim.fn.input, 'Make Command Input: ')
+        local ok, mkprg = pcall(
+                vim.fn.input,
+                'Make Command Input: ',
+                '',
+                'file'
+        )
 
         if not ok or mkprg == '' then
                 return
