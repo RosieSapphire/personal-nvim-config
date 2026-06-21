@@ -191,15 +191,6 @@ vim.keymap.set('n', '<leader>so', function()
         vim.cmd('so')
 end, { desc = "Source the current file (used for all *.lua file changes)." })
 
-----------------------------------------
--- TODO: Make this work properly. lol --
-----------------------------------------
-
---[[
--- Going to help page for what's currently under the cursor
-vim.keymap.set('n', '<leader>gh', function() vim.cmd('help|<cword>') end)
-]]--
-
 -----------------------------------------------------------------------
 -- FORMATTING THE CURRENT FILE AND RETURNING TO THE CURSOR POSITION! --
 -----------------------------------------------------------------------
