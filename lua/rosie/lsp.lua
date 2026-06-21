@@ -22,10 +22,12 @@ vim.lsp.config('lua_ls', {
 
 vim.lsp.enable('lua_ls')
 
+local clangd = vim.fn.stdpath('data') .. '/mason/bin/clangd'
+
 -- Clang --
 vim.lsp.config('clangd', {
 	cmd = {
-                'clangd',
+                clangd,
                 '--query-driver=/opt/libdragon/bin/mips64-elf-gcc'
         },
 	filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
