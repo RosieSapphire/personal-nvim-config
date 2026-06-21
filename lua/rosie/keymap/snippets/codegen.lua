@@ -93,11 +93,11 @@ local function ifdef_mode_visual(guard, do_else)
                 else
                         real_g = guard
                 end
-        
+
                 if line_a > line_b then
                         line_a, line_b = line_b, line_a
                 end
-        
+
                 if do_else == true then
                         vim.fn.append(line_b, {
                                 '#else /* ' .. real_g .. ' ' .. name .. ' */',
@@ -108,11 +108,11 @@ local function ifdef_mode_visual(guard, do_else)
                                 '#endif /* ' .. real_g .. ' ' .. name .. ' */'
                         })
                 end
-        
+
                 vim.fn.append(line_a - 1, {
                         real_g .. ' ' .. name
                 })
-        
+
                 -- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
         end
 end
