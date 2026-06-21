@@ -536,21 +536,25 @@ function M.blame_line()
 end
 
 function M.commit_prompt()
-        vim.ui.input({ prompt = 'Commit message: ' }, function(msg)
-                if not msg or msg == '' then
+        local ok, msg = pcall(vim.fn.input, 'Commit message: ', '', 'file')
+
+        if not ok or msg == '' then
+                return
+        end
+
+        if not msg or msg == '' then
+                return
+        end
+
+        git({ 'commit', '-m', msg }, function(out)
+                local text = out.stdout .. out.stderr
+
+                if out.code ~= 0 then
+                        scratch('git commit failed', 'git', text)
                         return
                 end
 
-                git({ 'commit', '-m', msg }, function(out)
-                        local text = out.stdout .. out.stderr
-
-                        if out.code ~= 0 then
-                                scratch('git commit failed', 'git', text)
-                                return
-                        end
-
-                        scratch('git commit', 'git', text)
-                end)
+                scratch('git commit', 'git', text)
         end)
 end
 
