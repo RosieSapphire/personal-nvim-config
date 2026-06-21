@@ -195,14 +195,6 @@ end, { desc = "Source the current file (used for all *.lua file changes)." })
 -- FORMATTING THE CURRENT FILE AND RETURNING TO THE CURSOR POSITION! --
 -----------------------------------------------------------------------
 
-------------------------------------------------------------------------------
--- FIXME: If, when finished with the formatting, the file becomes smaller   --
---        than it was before, and the cursor happens to be at the bottom of --
---        the window, it will produce an error stating that the new cursor  --
---        position is lower than the file can support. Maybe I could clamp  --
---        it to the new bottom of the buffer? That's all I can think. lol   --
-------------------------------------------------------------------------------
-
 local function clang_format_current_buffer()
         -- Make sure we actually *have* clang-format, or we're fucked. lol
         if 0 == vim.fn.executable('clang-format') then
