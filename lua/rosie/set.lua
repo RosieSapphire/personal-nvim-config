@@ -1,86 +1,45 @@
---------------------------------------
--- MACROS FOR BETTER PATH SEARCHING --
---------------------------------------
+-------------------------------
+-- lua/rosie/set.lua (START) --
+-------------------------------
 
-vim.opt.path:append("**")
-vim.opt.wildmenu = true
+-- Lines & Numbers --
+vim.opt.number         = true
+vim.opt.relativenumber = true
+vim.opt.wrap           = true
 
--- Function for finding stuff with grep (normal mode)
-local function grep_find_normal(opts)
-        opts = opts or {}
+-- Tabs --
+vim.opt.expandtab   = true -- Cringe imo, but it makes files more consistent
+vim.opt.tabstop     = 8
+vim.opt.softtabstop = 8
+vim.opt.shiftwidth  = 8
+vim.opt.smartindent = true
+vim.opt.autoindent  = true
 
-        local word = vim.fn.expand('<cword>')
+-- Columns --
+vim.opt.scrolloff   = 8
+vim.opt.signcolumn  = 'yes' -- Figure out what this does
+vim.opt.colorcolumn = '78'
 
-        if not opts.imprecise then
-                word = '\\<' .. word .. '\\>'
+-- Diagnostics --
+vim.diagnostic.config({
+        virtual_text = false,
+        signs        = true,
+        underline    = true,
+        float = { border = 'rounded', focusable = false }
+})
+
+vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+        pattern  = '*',
+        callback = function()
+                vim.diagnostic.open_float(nil, { focus = false })
         end
+})
 
-        local pattern = opts.pattern or '**/*'
+-- Etc --
+vim.opt.updatetime = 250
+vim.opt.cinoptions:append({':0'})
 
-        -- Push the the mark stack
-        vim.cmd("normal! m'")
-
-        -- Perform the fucken grep
-        vim.cmd('silent! vimgrep /' .. word .. '/gj ' .. pattern)
-
-        -- Open up the quickfix panel with the results. If
-        -- there are no results, print a message saying so!
-        if not vim.tbl_isempty(vim.fn.getqflist()) then
-                -- This is the success condition!
-                vim.cmd('copen')
-                return
-        end
-
-        -- This is the "failure" (we couldn't find anything) condition! :D
-        local pat_labels = {
-                ['**/*.c']        = 'this directory\'s C Source files',
-                ['**/*.h']        = 'this directory\'s C Header files',
-                ['**/*.c **/*.h'] = 'this directory\'s C Source and Header files',
-        }
-
-        local fmt = 'No matches found for "%s" in %s'
-        local pat = pat_labels[pattern] or pattern
-
-        vim.notify(string.format(fmt, word, pat), vim.log.levels.INFO)
-end
-
-vim.keymap.set({ 'n', 'x' }, '<leader>cp', function()
-        vim.api.nvim_feedkeys('"+y', 'n', true)
-end, { desc = "Yank some shit into the system's clipboard." })
-
-vim.keymap.set('n', '<leader>mason', function()
-        vim.cmd('Mason')
-end, { desc = "Open the Mason window (rarely-used, hence long name)." })
-
-vim.keymap.set('n', '<leader>lr', function()
-        vim.cmd('registers')
-end, { desc = "List contents of all registers." })
-
-vim.keymap.set('n', '<leader>*h', function()
-        grep_find_normal({ pattern = '**/*.h', imprecise = false })
-end, { desc = "Find <cword> in all *.h files (normal, strict)." })
-
-vim.keymap.set('n', '<leader>*c', function()
-        grep_find_normal({ pattern = '**/*.c', imprecise = false })
-end, { desc = "Find <cword> in all *.c files (normal, strict)." })
-
-vim.keymap.set('n', '<leader>*a', function()
-        grep_find_normal({ pattern = '**/*.c **/*.h', imprecise = false })
-end, { desc = "Find <cword> in all *.h & *.c files (normal, strict)." })
-
-vim.keymap.set('n', '<leader>*ih', function()
-        grep_find_normal({ pattern = '**/*.h', imprecise = true })
-end, { desc = "Find <cword> in all *.h files (normal, loose)." })
-
-vim.keymap.set('n', '<leader>*ic', function()
-        grep_find_normal({ pattern = '**/*.c', imprecise = true })
-end, { desc = "Find <cword> in all *.c files (normal, loose)." })
-
-vim.keymap.set('n', '<leader>*ia', function()
-        grep_find_normal({ pattern = '**/*.{c,h}', imprecise = true })
-end, { desc = "Find <cword> in all *.h & *.c files (normal, loose)." })
-
--- Overwrite hte original quickfix formatting so I can make it look less shitty
+-- Overwrite original shitty fucking quickfix menu formatting.
 function _G.quickfix_custom_format(info)
         local qflist = vim.fn.getqflist({ id = info.id, items = 0, title = 0 })
         local lines = {}
@@ -131,161 +90,24 @@ end
 
 vim.o.quickfixtextfunc = '{info -> v:lua.quickfix_custom_format(info)}'
 
-vim.keymap.set('n', '<C-e>', function()
-        local qf = {}
-
-        for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-                ------------------------------------------------------------
-                -- FIXME: This indentation is ugly and I'd like to invert --
-                --        the conditional statement to be prettier. qwq   --
-                ------------------------------------------------------------
-                if 0 ~= vim.fn.buflisted(bufnr) then
-                        -- Get the name of the buffer from the number
-                        local name = vim.fn.fnamemodify(
-                                vim.api.nvim_buf_get_name(bufnr),
-                                ':t'
-                        )
-
-                        -- If the file has no name, make sure we can see it. lol
-                        if '' == name then
-                                name = '[No Name]'
-                        end
-
-                        -- Get the line we were on upon this buffers last access
-                        local line = vim.api.nvim_buf_get_mark(bufnr, '"')[1]
-
-                        -- Make sure we didn't somehow get a fucked up line num
-                        if 0 == line then
-                                line = 1
-                        end
-
-                        -- Add this element to the Quickfix buffer! Make sure
-                        -- that when we open it, it puts us on the same line
-                        -- we were on when we last accessed it! :D
-                        table.insert(qf, {
-                                bufnr = bufnr,
-                                lnum  = line,
-                                col   = 1,
-                                text  = name
-                        })
-                end
-        end
-
-        vim.fn.setqflist({}, 'r', { title = 'Buffers', items = qf })
-        vim.cmd('copen')
-end, { desc = "List all open buffers in quickfix window." })
+-----------------------------
+-- lua/rosie/set.lua (END) --
+-----------------------------
 
 ----------------------------------------------------------
 -- TODO: I REALLY fucking want a rename variable macro! --
 ----------------------------------------------------------
 
-vim.keymap.set('n', '<leader>qo', function()
-        vim.cmd('copen')
-end, { desc = "Open quickfix window." })
+----------------------------------------
+-- lua/rosie/keymap/basic.lua (START) --
+----------------------------------------
 
-vim.keymap.set('n', '<leader>qc', function()
-        vim.cmd('cclose')
-end, { desc = "Close quickfix window." })
-
-vim.keymap.set('n', '<leader>so', function()
-        vim.cmd('so')
-end, { desc = "Source the current file (used for all *.lua file changes)." })
-
------------------------------------------------------------------------
--- FORMATTING THE CURRENT FILE AND RETURNING TO THE CURSOR POSITION! --
------------------------------------------------------------------------
-
-local function clang_format_current_buffer()
-        -- Make sure we actually *have* clang-format, or we're fucked. lol
-        if 0 == vim.fn.executable('clang-format') then
-                vim.notify("ERROR: `clang-format` not found on system! " ..
-                           "Please install via your distro's package manager",
-                           vim.log.levels.ERROR)
-                return
-        end
-
-        -- Save the previous cursor position, 'cuz shit's gonna move around
-        local cursor_pos = vim.api.nvim_win_get_cursor(0)
-
-        -- Get all the lines in the file
-        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-
-        -- Perform the clang-format shenanigans on them
-        local formatted = vim.fn.systemlist(
-                'clang-format --assume-filename=file.c --style=file --fallback-style=none 2>&1',
-                lines
-        )
-
-        -- Make sure it actually ran successfully, otherwise print an error
-        if 0 ~= vim.v.shell_error then
-                vim.notify(table.concat(formatted, '\n'), vim.log.levels.ERROR)
-                return
-        end
-
-        -- Make sure that we don't modify it if it hasn't changed.
-        -- This makes it much easier to know when we actually updated.
-        local og_text = table.concat(lines, '\n'):gsub('%s+$', '')
-        local new_text = table.concat(formatted, '\n'):gsub('%s+$', '')
-        if og_text == new_text then
-                vim.notify('No changes to file after formatting.', vim.log.levels.INFO)
-                return
-        end
-
-        -- Put the new data for the current buffer
-        vim.api.nvim_buf_set_lines(0, 0, -1, false, formatted)
-
-        -- Now restore our previous window view so it looks like nothing
-        -- happened! But also make sure that it stays within the bounds of
-        -- the file. For example, if the file was formatted is of a shorter
-        -- length than the original and the cursor head happens to be at the
-        -- bottom of the file. This doesn't happen very often, but it's
-        -- extremely annoying when it does, so it's nice to just fix up! :D
-        local line_cnt_new = vim.api.nvim_buf_line_count(0)
-        local cursor_new   = {
-                math.min(cursor_pos[1], line_cnt_new),
-                cursor_pos[2]
-        }
-
-        vim.api.nvim_win_set_cursor(0, cursor_new)
+local function bind_cmd_simple(keys, cmd)
+        vim.keymap.set('n', keys, function() vim.cmd(cmd) end, {})
 end
 
-vim.keymap.set('n', '<leader>fr', function()
-        clang_format_current_buffer()
-end, { desc = "Format current file with clang-format." })
-
-vim.keymap.set('n', '<leader>fw', function()
-        clang_format_current_buffer()
-        if vim.bo.modified then
-                vim.cmd('write')
-        end
-end, { desc = "Format current file with clang-format and save if changed." })
-
-vim.keymap.set('n', '<leader>w', function()
-        vim.cmd('write')
-end, { desc = "Write current file." })
-
-vim.keymap.set('n', '<leader>bd', function()
-        vim.cmd('bd!')
-end, { desc = "Delete current buffer." })
-
-vim.keymap.set('n', '<leader>cmk', function()
-        vim.cmd('set makeprg?')
-end, { desc = "Print the currently set 'makeprg' command.", silent = true })
-
-vim.keymap.set('n', '<leader>smk', function()
-        local ok, mkprg = pcall(vim.fn.input, 'Make Command Input: ')
-
-        if not ok or mkprg == '' then
-                return
-        end
-
-        vim.opt.makeprg = mkprg;
-end, { desc = "Set new 'makeprg' command via prompt.", silent = true })
-
-vim.keymap.set('n', '<leader>mk', function()
-        vim.cmd('wa') -- Make sure to save all open files before running!
-        vim.cmd('make')
-end, { desc = "Run the 'makeprg' cmd (save all first).", silent = true })
+bind_cmd_simple('<leader>w', 'write')
+bind_cmd_simple('<leader>bd', 'bd!')
 
 vim.keymap.set('n', '<leader>caec', function()
         local curbuf = vim.api.nvim_get_current_buf()
@@ -308,7 +130,37 @@ vim.keymap.set('n', '<leader>caec', function()
         end
 end, { desc = "Closes all buffers except the one focused.", silent = true })
 
--- Function for opening all files of (a) certain type(s)
+--------------------------------------
+-- lua/rosie/keymap/basic.lua (END) --
+--------------------------------------
+
+-----------------------------------------
+-- lua/rosie/keymap/coding.lua (START) --
+-----------------------------------------
+
+vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", {
+        noremap = true, silent = true
+})
+
+vim.keymap.set('n', '<leader>cmk', function()
+        vim.cmd('set makeprg?')
+end, { desc = "Print the currently set 'makeprg' command.", silent = true })
+
+vim.keymap.set('n', '<leader>smk', function()
+        local ok, mkprg = pcall(vim.fn.input, 'Make Command Input: ')
+
+        if not ok or mkprg == '' then
+                return
+        end
+
+        vim.opt.makeprg = mkprg;
+end, { desc = "Set new 'makeprg' command via prompt.", silent = true })
+
+vim.keymap.set('n', '<leader>mk', function()
+        vim.cmd('wa') -- Make sure to save all open files before running!
+        vim.cmd('make')
+end, { desc = "Run the 'makeprg' cmd (save all first).", silent = true })
+
 local function add_project_buffers_of_type(exts)
         local patterns = {}
 
@@ -346,71 +198,6 @@ vim.keymap.set('n', '<leader>oacf', function()
         add_project_buffers_of_type({ 'c' })
 end, { desc = "Opens all *.c files in pwd.", silent = false  })
 
-vim.api.nvim_create_autocmd("FileType", {
-        pattern = "qf",
-        callback = function()
-                vim.keymap.set("n", "<CR>", function()
-                        local idx = vim.fn.line(".") -- current line in qf list
-                        vim.cmd("wincmd p")          -- go back to  orig window
-                        vim.cmd("cc " .. idx)        -- jump to THAT entry
-                        vim.cmd("cclose")            -- close quickfix
-                end, { desc = "Open file in quickfix menu.", buffer = true })
-        end,
-})
-
-local snip_dir = '$HOME/.config/nvim/snippets/'
-
-vim.keymap.set('n', ',pgcc', function()
-        local file = vim.fn.expand(snip_dir .. 'pragma_gcc')
-        vim.cmd('read ' .. file)
-        vim.api.nvim_feedkeys('j$i', 'n', false)
-end, { desc = "Generate #pragma for GCC.", noremap = true, silent = true })
-
-vim.keymap.set('n', ',pcla', function()
-        local file = vim.fn.expand(snip_dir .. 'pragma_clang')
-        vim.cmd('read ' .. file)
-        vim.api.nvim_feedkeys('j$i', 'n', false)
-end, { desc = "Generate #pragma for clang.", noremap = true, silent = true })
-
-vim.keymap.set('n', ',hello', function()
-        local file = vim.fn.expand(snip_dir .. 'hello_world')
-        vim.cmd("read " .. file)
-end, { desc = "Generate C hello world code.", noremap = true, silent = true })
-
-vim.keymap.set('n', ',dbm', function()
-        local file = vim.fn.expand(snip_dir .. 'debug_macro')
-        vim.cmd('read ' .. file)
-end, { desc = "Generate DEBUGF macro.", noremap = true, silent = true })
-
--------------------------------------------------------------
--- SNIPPETS FOR INCLUDE HEADER AND SOURCE SECTION COMMENTS --
--------------------------------------------------------------
-
-local function snippet_bind_create(keybind, path)
-        vim.keymap.set('n', keybind, function()
-                local file = vim.fn.expand(path)
-                vim.cmd('read ' .. file)
-        end, { noremap = true, silent = true })
-end
-
-snippet_bind_create(',cmain', snip_dir .. 'com/main')
-snippet_bind_create(',cdef', snip_dir .. 'com/defines')
-snippet_bind_create(',cenu', snip_dir .. 'com/enums')
-snippet_bind_create(',cfuni', snip_dir .. 'com/func_inl')
-snippet_bind_create(',cfunprp', snip_dir .. 'com/func_prv_pro')
-snippet_bind_create(',cfunpri', snip_dir .. 'com/func_prv_imp')
-snippet_bind_create(',cfunpup', snip_dir .. 'com/func_pub_pro')
-snippet_bind_create(',cfunpui', snip_dir .. 'com/func_pub_imp')
-snippet_bind_create(',cinc', snip_dir .. 'com/include')
-snippet_bind_create(',cmac', snip_dir .. 'com/macros')
-snippet_bind_create(',cstru', snip_dir .. 'com/structs')
-snippet_bind_create(',ctyp', snip_dir .. 'com/typedefs')
-snippet_bind_create(',cvarpup', snip_dir .. 'com/var_pub_dec')
-snippet_bind_create(',cvarpui', snip_dir .. 'com/var_pub_imp')
-snippet_bind_create(',cvarpr', snip_dir .. 'com/var_prv')
-snippet_bind_create(',bast', snip_dir .. 'basic_types')
-
--- Generating CTags for code --
 vim.api.nvim_create_user_command('TagsMake', function()
         if 0 == vim.fn.executable('ctags') then
                 vim.notify("ERROR: `ctags` is not an executable " ..
@@ -427,63 +214,214 @@ vim.api.nvim_create_user_command('TagsMake', function()
         })
 end, {})
 
-----------------------------------
--- SNIPPETS FOR CODE GENERATION --
-----------------------------------
-
---------------
--- Comments --
---------------
-
-local function comment_generate(prefix, is_inline)
-        -- Get the indentation level at the current line
-        local line   = vim.api.nvim_get_current_line()
-        local indent = line:match('^%s*') or ''
-        local pfx    = prefix or ''
-
-        -- Append the comment block skeleton to the lines above us
-        -- (with the correct indentation-level of course!)
-        if is_inline then
-                local crs  = vim.api.nvim_win_get_cursor(0)
-                local row  = crs[1]
-                local prow = row - 1
-                local text = indent .. '/* ' .. pfx .. ' */'
-
-                -- Inline comment
-                vim.api.nvim_buf_set_lines(0, prow, prow, false, { text })
-                vim.api.nvim_win_set_cursor(0, { row, #text - 3 })
-                vim.cmd('startinsert')
-        else
-                -- Block comment
-                local crs  = vim.api.nvim_win_get_cursor(0)
-                local row  = crs[1]
-                local prow = row - 1
-
-                vim.api.nvim_buf_set_lines(0, prow, prow, false, {
-                        indent .. '/*',
-                        indent .. ' * ' .. pfx,
-                        indent .. ' */'
-                })
-                vim.api.nvim_win_set_cursor(0, {
-                        row + 1,
-                        #indent + 3 + #pfx
-                })
-                vim.cmd('startinsert!')
-        end
+local function escape_lua_pattern(str)
+        return str:gsub('([^%w])', '%%%1')
 end
 
-local function comment_generate_mapper(mapping, prefix, is_inline)
-        vim.keymap.set('n', mapping, function()
-                comment_generate(prefix, is_inline)
+local function encase_current_line(left, right)
+        local line = vim.api.nvim_get_current_line()
+
+        local indent  = line:match('^%s*') or ''
+        local content = line:sub(#indent + 1)
+
+        vim.api.nvim_set_current_line(
+                indent .. left .. content .. right
+        )
+end
+
+local function encase_visual_select(left, right)
+        local pos_a = vim.fn.getpos("'<")
+        local pos_b = vim.fn.getpos("'>")
+
+        if pos_a[2] ~= pos_b[2] then
+                return
+        end
+
+        local row = pos_a[2]
+
+        local col_a = pos_a[3]
+        local col_b = pos_b[3]
+
+        if col_a > col_b then
+                col_a, col_b = col_b, col_a
+        end
+
+        local line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
+
+        local before   = line:sub(1, col_a - 1)
+        local selected = line:sub(col_a, col_b)
+        local after    = line:sub(col_b + 1)
+
+        local updated = before .. left .. selected .. right .. after
+
+        vim.api.nvim_buf_set_lines(0, row - 1, row, false, { updated })
+end
+
+local function unencase_visual_select(left, right)
+        local pos_a = vim.fn.getpos("'<")
+        local pos_b = vim.fn.getpos("'>")
+
+        if pos_a[2] ~= pos_b[2] then
+                return
+        end
+
+        local row = pos_a[2]
+
+        local col_a = pos_a[3]
+        local col_b = pos_b[3]
+
+        if col_a > col_b then
+                col_a, col_b = col_b, col_a
+        end
+
+        local line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
+
+        local len_left  = #left
+        local len_right = #right
+
+        local real_left  = line:sub(col_a - len_left, col_a - 1)
+        local real_right = line:sub(col_b + 1, col_b + len_right)
+
+        -- Verify wrappers actually exist
+        if real_left ~= left or real_right ~= right then
+                return
+        end
+
+        local before = line:sub(1, col_a - len_left - 1)
+        local middle = line:sub(col_a, col_b)
+        local after  = line:sub(col_b + len_right + 1)
+
+        local updated = before .. middle .. after
+
+        vim.api.nvim_buf_set_lines(0, row - 1, row, false, { updated })
+end
+
+local function unencase_current_line(left, right)
+        local line = vim.api.nvim_get_current_line()
+
+        local pat_left  = escape_lua_pattern(left)
+        local pat_right = escape_lua_pattern(right)
+
+        local pattern = '^(%s*)' .. pat_left .. '(.-)' .. pat_right .. '%s*$'
+
+        local updated = line:gsub(pattern, '%1%2')
+
+        vim.api.nvim_set_current_line(updated)
+end
+
+local function bind_encase_func_normal(bind, open, close)
+        vim.keymap.set('n', bind, function()
+                encase_current_line(open, close)
+        end, { silent = true })
+end
+
+local function bind_unencase_func_normal(bind, open, close)
+        vim.keymap.set('n', bind, function()
+                unencase_current_line(open, close)
+        end, { silent = true })
+end
+
+bind_encase_func_normal(',ec', '/* ', ' */')
+bind_encase_func_normal(',ep', '(', ')')
+bind_unencase_func_normal(',uc', '/* ', ' */')
+bind_unencase_func_normal(',up', '(', ')')
+
+---------------------------------------------------------------
+-- TODO: These should probably have their own wrappers, too. --
+---------------------------------------------------------------
+
+vim.keymap.set('x', ',ec', function()
+        local line_a = vim.fn.line('v')
+        local line_b = vim.fn.line('.')
+
+        if line_a > line_b then
+                line_a, line_b = line_b, line_a
+        end
+
+        local lines = vim.api.nvim_buf_get_lines(0, line_a - 1, line_b, false)
+        local indent = lines[1]:match('^%s*') or ''
+        local commented = { indent .. '/*' }
+
+        for _, line in ipairs(lines) do
+                table.insert(commented, indent .. ' * ' .. line:sub(#indent + 1))
+        end
+
+        table.insert(commented, indent .. ' */')
+
+        vim.api.nvim_buf_set_lines(0, line_a - 1, line_b, false, commented)
+
+        -- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
+        -- vim.cmd('normal! zz')
+
+        vim.api.nvim_feedkeys(
+                vim.api.nvim_replace_termcodes('<Esc>', true, false, true),
+                'n',
+                false
+        )
+end, { desc = "Add /* */ (visual).", noremap = true, silent = true })
+
+vim.keymap.set('x', ',ep', function()
+        vim.api.nvim_input('<Esc>')
+
+        vim.schedule(function()
+                encase_visual_select('(', ')')
+        end)
+end, { desc = "Add ( ) (visual).", noremap = true, silent = true })
+
+vim.keymap.set('x', ',uc', function()
+        vim.api.nvim_input('<Esc>')
+
+        vim.schedule(function()
+                unencase_visual_select('/* ', ' */')
+        end)
+end, { desc = "Remove /* */ (visual).", noremap = true, silent = true })
+
+vim.keymap.set('x', ',up', function()
+        vim.api.nvim_input('<Esc>')
+
+        vim.schedule(function()
+                unencase_visual_select('(', ')')
+        end)
+end, { desc = "Remove ( ) (visual).", noremap = true, silent = true })
+
+---------------------------------------
+-- lua/rosie/keymap/coding.lua (END) --
+---------------------------------------
+
+-------------------------------------------------
+-- lua/rosie/keymap/snippets/funcs.lua (START) --
+-------------------------------------------------
+
+local snip_dir = '$HOME/.config/nvim/snippets/'
+
+local function snip_bind_create(keybind, path)
+        vim.keymap.set('n', keybind, function()
+                local file = vim.fn.expand(snip_dir .. path)
+                vim.cmd("read " .. file)
         end, { noremap = true, silent = true })
 end
 
-comment_generate_mapper(',cbe', '', false)
-comment_generate_mapper(',cbt', 'TODO: ', false)
-comment_generate_mapper(',cbf', 'FIXME: ', false)
-comment_generate_mapper(',cie', '', true)
-comment_generate_mapper(',cit', 'TODO: ', true)
-comment_generate_mapper(',cif', 'FIXME: ', true)
+local function snip_bind_create_pragma(keybind, path)
+        vim.keymap.set('n', keybind, function()
+                local file = vim.fn.expand(snip_dir .. path)
+                vim.cmd("read " .. file)
+                vim.api.nvim_feedkeys('j$i', 'n', false)
+        end, { noremap = true, silent = true })
+end
+
+-----------------------------------------------
+-- lua/rosie/keymap/snippets/funcs.lua (END) --
+-----------------------------------------------
+
+---------------------------------------------------
+-- lua/rosie/keymap/snippets/codegen.lua (START) --
+---------------------------------------------------
+
+snip_bind_create_pragma(',pgcc', 'pragma_gcc')
+snip_bind_create_pragma(',pcla', 'pragma_clang')
+snip_bind_create(',dbm', 'debug_macro')
+snip_bind_create(',hello', 'hello_world')
+snip_bind_create(',bast', 'basic_types')
 
 ----------------------------------------------------------------------------
 -- TODO: Create mapper functions for all these too so they clean as FUCK! --
@@ -491,13 +429,13 @@ comment_generate_mapper(',cif', 'FIXME: ', true)
 
 vim.keymap.set('n', ',inc', function()
         local file = vim.fn.expand(snip_dir .. '/inc_setup_quote')
-        vim.cmd('read ' .. file)
+        vim.cmd("read " .. file)
         vim.api.nvim_feedkeys('$hhi', 'n', false)
 end, { desc = "Generate #include quotes.", noremap = true, silent = true })
 
 vim.keymap.set('n', ',binc', function()
         local file = vim.fn.expand(snip_dir .. '/inc_setup_angle')
-        vim.cmd('read ' .. file)
+        vim.cmd("read " .. file)
         vim.api.nvim_feedkeys('$hhi', 'n', false)
 end, { desc = "Generate #include angles.", noremap = true, silent = true })
 
@@ -509,14 +447,8 @@ vim.keymap.set('n', ',hg', function()
                 return
         end
 
-        vim.fn.append(0, {
-                '#ifndef ' .. guard,
-                '#define ' .. guard,
-                ''
-        })
-
-        vim.fn.append(vim.fn.line('$'), {
-                '',
+        vim.fn.append(0, { '#ifndef ' .. guard, '#define ' .. guard, '' })
+        vim.fn.append(vim.fn.line('$'), { '',
                 '#endif /* #ifndef ' .. guard .. ' */'
         })
 
@@ -623,208 +555,80 @@ ifdef_macro_mapper('x', ',ifed', '#ifdef', true)
 ifdef_macro_mapper('x', ',ifnd', '#ifndef', false)
 ifdef_macro_mapper('x', ',ifned', '#ifndef', true)
 
-local function escape_lua_pattern(str)
-        return str:gsub('([^%w])', '%%%1')
+-------------------------------------------------
+-- lua/rosie/keymap/snippets/codegen.lua (END) --
+-------------------------------------------------
+
+---------------------------------------------------
+-- lua/rosie/keymap/snippets/comments.lua (START) --
+---------------------------------------------------
+
+snip_bind_create(',cmain', 'com/main')
+snip_bind_create(',cdef', 'com/defines')
+snip_bind_create(',cenu', 'com/enums')
+snip_bind_create(',cfuni', 'com/func_inl')
+snip_bind_create(',cfunprp', 'com/func_prv_pro')
+snip_bind_create(',cfunpri', 'com/func_prv_imp')
+snip_bind_create(',cfunpup', 'com/func_pub_pro')
+snip_bind_create(',cfunpui', 'com/func_pub_imp')
+snip_bind_create(',cinc', 'com/include')
+snip_bind_create(',cmac', 'com/macros')
+snip_bind_create(',cstru', 'com/structs')
+snip_bind_create(',ctyp', 'com/typedefs')
+snip_bind_create(',cvarpup', 'com/var_pub_dec')
+snip_bind_create(',cvarpui', 'com/var_pub_imp')
+snip_bind_create(',cvarpr', 'com/var_prv')
+
+local function comment_generate(prefix, is_inline)
+        -- Get the indentation level at the current line
+        local line   = vim.api.nvim_get_current_line()
+        local indent = line:match('^%s*') or ''
+        local pfx    = prefix or ''
+
+        -- Append the comment block skeleton to the lines above us
+        -- (with the correct indentation-level of course!)
+        if is_inline then
+                local crs  = vim.api.nvim_win_get_cursor(0)
+                local row  = crs[1]
+                local prow = row - 1
+                local text = indent .. '/* ' .. pfx .. ' */'
+
+                -- Inline comment
+                vim.api.nvim_buf_set_lines(0, prow, prow, false, { text })
+                vim.api.nvim_win_set_cursor(0, { row, #text - 3 })
+                vim.cmd('startinsert')
+        else
+                -- Block comment
+                local crs  = vim.api.nvim_win_get_cursor(0)
+                local row  = crs[1]
+                local prow = row - 1
+
+                vim.api.nvim_buf_set_lines(0, prow, prow, false, {
+                        indent .. '/*',
+                        indent .. ' * ' .. pfx,
+                        indent .. ' */'
+                })
+                vim.api.nvim_win_set_cursor(0, {
+                        row + 1,
+                        #indent + 3 + #pfx
+                })
+                vim.cmd('startinsert!')
+        end
 end
 
-local function encase_current_line(left, right)
-        local line = vim.api.nvim_get_current_line()
-
-        local indent  = line:match('^%s*') or ''
-        local content = line:sub(#indent + 1)
-
-        vim.api.nvim_set_current_line(
-                indent .. left .. content .. right
-        )
+local function comment_generate_mapper(mapping, prefix, is_inline)
+        vim.keymap.set('n', mapping, function()
+                comment_generate(prefix, is_inline)
+        end, { noremap = true, silent = true })
 end
 
-local function encase_visual_select(left, right)
-        local pos_a = vim.fn.getpos("'<")
-        local pos_b = vim.fn.getpos("'>")
+comment_generate_mapper(',cbe', '', false)
+comment_generate_mapper(',cbt', 'TODO: ', false)
+comment_generate_mapper(',cbf', 'FIXME: ', false)
+comment_generate_mapper(',cie', '', true)
+comment_generate_mapper(',cit', 'TODO: ', true)
+comment_generate_mapper(',cif', 'FIXME: ', true)
 
-        if pos_a[2] ~= pos_b[2] then
-                return
-        end
-
-        local row = pos_a[2]
-
-        local col_a = pos_a[3]
-        local col_b = pos_b[3]
-
-        if col_a > col_b then
-                col_a, col_b = col_b, col_a
-        end
-
-        local line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
-
-        local before   = line:sub(1, col_a - 1)
-        local selected = line:sub(col_a, col_b)
-        local after    = line:sub(col_b + 1)
-
-        local updated = before .. left .. selected .. right .. after
-
-        vim.api.nvim_buf_set_lines(0, row - 1, row, false, { updated })
-end
-
-local function unencase_visual_select(left, right)
-        local pos_a = vim.fn.getpos("'<")
-        local pos_b = vim.fn.getpos("'>")
-
-        if pos_a[2] ~= pos_b[2] then
-                return
-        end
-
-        local row = pos_a[2]
-
-        local col_a = pos_a[3]
-        local col_b = pos_b[3]
-
-        if col_a > col_b then
-                col_a, col_b = col_b, col_a
-        end
-
-        local line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
-
-        local len_left  = #left
-        local len_right = #right
-
-        local real_left  = line:sub(col_a - len_left, col_a - 1)
-        local real_right = line:sub(col_b + 1, col_b + len_right)
-
-        -- Verify wrappers actually exist
-        if real_left ~= left or real_right ~= right then
-                return
-        end
-
-        local before = line:sub(1, col_a - len_left - 1)
-        local middle = line:sub(col_a, col_b)
-        local after  = line:sub(col_b + len_right + 1)
-
-        local updated = before .. middle .. after
-
-        vim.api.nvim_buf_set_lines(0, row - 1, row, false, { updated })
-end
-
-local function unencase_current_line(left, right)
-        local line = vim.api.nvim_get_current_line()
-
-        local pat_left  = escape_lua_pattern(left)
-        local pat_right = escape_lua_pattern(right)
-
-        local pattern = '^(%s*)' .. pat_left .. '(.-)' .. pat_right .. '%s*$'
-
-        local updated = line:gsub(pattern, '%1%2')
-
-        vim.api.nvim_set_current_line(updated)
-end
-
-vim.keymap.set('n', ',ec', function()
-        encase_current_line('/* ', ' */')
-end, { desc = "Add /* */ (normal).", silent = true })
-
-vim.keymap.set('n', ',ep', function()
-        encase_current_line('(', ')')
-end, { desc = "Add ( ) (normal).", silent = true })
-
-vim.keymap.set('n', ',uc', function()
-        unencase_current_line('/* ', ' */')
-end, { desc = "Remove /* */ (normal).", noremap = true, silent = true })
-
-vim.keymap.set('n', ',up', function()
-        unencase_current_line('(', ')')
-end, { desc = "Remove ( ) (normal).", noremap = true, silent = true })
-
-vim.keymap.set('x', ',ec', function()
-        local line_a = vim.fn.line('v')
-        local line_b = vim.fn.line('.')
-
-        if line_a > line_b then
-                line_a, line_b = line_b, line_a
-        end
-
-        local lines = vim.api.nvim_buf_get_lines(0, line_a - 1, line_b, false)
-        local indent = lines[1]:match('^%s*') or ''
-        local commented = { indent .. '/*' }
-
-        for _, line in ipairs(lines) do
-                table.insert(commented, indent .. ' * ' .. line:sub(#indent + 1))
-        end
-
-        table.insert(commented, indent .. ' */')
-
-        vim.api.nvim_buf_set_lines(0, line_a - 1, line_b, false, commented)
-
-        -- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
-        -- vim.cmd('normal! zz')
-        
-        vim.api.nvim_feedkeys(
-                vim.api.nvim_replace_termcodes('<Esc>', true, false, true),
-                'n',
-                false
-        )
-end, { desc = "Add /* */ (visual).", noremap = true, silent = true })
-
-vim.keymap.set('x', ',ep', function()
-        vim.api.nvim_input('<Esc>')
-
-        vim.schedule(function()
-                encase_visual_select('(', ')')
-        end)
-end, { desc = "Add ( ) (visual).", noremap = true, silent = true })
-
-vim.keymap.set('x', ',uc', function()
-        vim.api.nvim_input('<Esc>')
-
-        vim.schedule(function()
-                unencase_visual_select('/* ', ' */')
-        end)
-end, { desc = "Remove /* */ (visual).", noremap = true, silent = true })
-
-vim.keymap.set('x', ',up', function()
-        vim.api.nvim_input('<Esc>')
-
-        vim.schedule(function()
-                unencase_visual_select('(', ')')
-        end)
-end, { desc = "Remove ( ) (visual).", noremap = true, silent = true })
-
--- Lines & Numbers --
-vim.opt.number         = true
-vim.opt.relativenumber = true
-vim.opt.wrap           = true
-
--- Tabs --
-vim.opt.expandtab   = true -- Cringe imo, but it makes files more consistent
-vim.opt.tabstop     = 8
-vim.opt.softtabstop = 8
-vim.opt.shiftwidth  = 8
-vim.opt.smartindent = true
-vim.opt.autoindent  = true
-
--- Columns --
-vim.opt.scrolloff   = 8
-vim.opt.signcolumn  = 'yes' -- Figure out what this does
-vim.opt.colorcolumn = '78'
-
--- Diagnostics --
-vim.diagnostic.config({
-        virtual_text = false,
-        signs        = true,
-        underline    = true,
-        float = { border = 'rounded', focusable = false }
-})
-
-vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-        pattern  = '*',
-        callback = function()
-                vim.diagnostic.open_float(nil, { focus = false })
-        end
-})
-
-vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", {
-        noremap = true, silent = true
-})
-
--- Etc --
-vim.opt.updatetime = 250
-vim.opt.cinoptions:append({':0'})
+-------------------------------------------------
+-- lua/rosie/keymap/snippets/comments.lua (END) --
+-------------------------------------------------
