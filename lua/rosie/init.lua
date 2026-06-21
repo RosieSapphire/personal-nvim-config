@@ -1,3 +1,4 @@
+require('rosie.shell')
 require('rosie.keymap')
 require('rosie.lazy')
 require('rosie.lsp')
