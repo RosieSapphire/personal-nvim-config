@@ -1,21 +1,24 @@
-snip_bind_create_pragma(',pgcc', 'pragma_gcc')
-snip_bind_create_pragma(',pcla', 'pragma_clang')
-snip_bind_create(',dbm', 'debug_macro')
-snip_bind_create(',hello', 'hello_world')
-snip_bind_create(',bast', 'basic_types')
+local snip = require('rosie.keymap.snippets.funcs')
+local dir  = snip.get_dir()
+
+snip.bind_create_pragma(',pgcc', 'pragma_gcc')
+snip.bind_create_pragma(',pcla', 'pragma_clang')
+snip.bind_create(',dbm', 'debug_macro')
+snip.bind_create(',hello', 'hello_world')
+snip.bind_create(',bast', 'basic_types')
 
 ----------------------------------------------------------------------------
 -- TODO: Create mapper functions for all these too so they clean as FUCK! --
 ----------------------------------------------------------------------------
 
 vim.keymap.set('n', ',inc', function()
-        local file = vim.fn.expand(snip_dir .. '/inc_setup_quote')
+        local file = vim.fn.expand(dir .. '/inc_setup_quote')
         vim.cmd("read " .. file)
         vim.api.nvim_feedkeys('$hhi', 'n', false)
 end, { desc = "Generate #include quotes.", noremap = true, silent = true })
 
 vim.keymap.set('n', ',binc', function()
-        local file = vim.fn.expand(snip_dir .. '/inc_setup_angle')
+        local file = vim.fn.expand(dir .. '/inc_setup_angle')
         vim.cmd("read " .. file)
         vim.api.nvim_feedkeys('$hhi', 'n', false)
 end, { desc = "Generate #include angles.", noremap = true, silent = true })

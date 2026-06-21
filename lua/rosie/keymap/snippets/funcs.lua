@@ -17,4 +17,8 @@ function M.bind_create_pragma(keybind, path)
         end, { noremap = true, silent = true })
 end
 
+function M.get_dir()
+	return dir
+end
+
 return M
