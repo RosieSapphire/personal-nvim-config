@@ -87,60 +87,6 @@ local function grep_find_normal(opts)
         vim.notify(string.format(fmt, word, pat), vim.log.levels.INFO)
 end
 
---------------------------------------------------------------------------------
--- FIXME: This is broken, so I disabled it. I wanna add it eventually tho. :c --
---------------------------------------------------------------------------------
-
---[[
-local function get_visual_selection()
-        local line_a = vim.fn.line("'<")
-        local line_b = vim.fn.line("'>")
-
-        local col_a = vim.fn.col("'<")
-        local col_b = vim.fn.col("'>")
-
-        local lines = vim.api.nvim_buf_get_lines(0, line_a - 1, line_b, false)
-
-        if 0 == #lines then
-                return ""
-        end
-
-        lines[#lines] = string.sub(lines[#lines], 1, col_b)
-        lines[1] = string.sub(lines[1], col_a)
-
-        return table.concat(lines, '\n')
-end
-
--- Function for finding stuff with grep (visual mode)
-local function grep_find_visual(opts)
-        -----------------------------------------------------------------------
-        -- FIXME: This doesn't seem to work either. It misses, like 90% of   --
-        --        the fucking results and usually just finds nothing at all. --
-        -----------------------------------------------------------------------
-        opts = opts or {}
-
-        local text = get_visual_selection()
-
-        if text == '' then
-                return
-        end
-
-        local pattern = opts.pattern or '**/*'
-
-        vim.cmd("normal! m'")
-        if 0 == vim.fn.executable('rg') then
-                vim.notify("ERROR: `rg` not found on system! " ..
-                           "Please install via your distro's package manager (apt: ripgrep)",
-                           vim.log.levels.ERROR)
-                return
-        end
-        vim.cmd('grep! "' .. vim.fn.escape(text, '"') .. '" ' .. pattern)
-
-        -- Open up the quickfix panel with the results
-        vim.cmd('copen')
-end
-]]--
-
 vim.keymap.set({ 'n', 'x' }, '<leader>cp', function()
         vim.api.nvim_feedkeys('"+y', 'n', true)
 end, { desc = "Yank some shit into the system's clipboard." })
