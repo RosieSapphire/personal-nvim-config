@@ -1,5 +1,3 @@
--- lua/user/git.lua
-
 local M = {}
 
 local uv = vim.uv or vim.loop
