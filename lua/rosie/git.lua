@@ -626,7 +626,28 @@ local function git_tui(args, title)
 end
 
 function M.add_patch()
-        git_tui({ 'git', 'add', '-p' }, 'git add -p')
+        local root = repo_root()
+        local file = current_file()
+
+        if not root or not file then
+                return
+        end
+
+        if vim.bo.modified then
+                vim.notify('Save the current buffer before using git add -p.',
+                           vim.log.levels.WARN)
+                return
+        end
+
+        local path = vim.fs.relpath(root, file)
+
+        if not path then
+                vim.notify('Current buffer is not inside this Git repository.',
+                           vim.log.levels.ERROR)
+                return
+        end
+
+        git_tui({ 'git', 'add', '-p', '--', path }, 'git add -p: ' .. path)
 end
 
 function M.unstage_patch()
