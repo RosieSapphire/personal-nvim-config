@@ -500,12 +500,6 @@ vim.keymap.set('n', ',cmain', function()
         vim.cmd('read ' .. file)
 end, { noremap = true, silent = true })
 
--- Main Function
-vim.keymap.set('n', ',cmain', function()
-        local file = vim.fn.expand(snip_dir .. 'com/main')
-        vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
-
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('TagsMake', function()
         if 0 == vim.fn.executable('ctags') then
