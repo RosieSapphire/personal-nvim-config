@@ -1,1 +1,1 @@
-require('rosie')
+require "rosie"

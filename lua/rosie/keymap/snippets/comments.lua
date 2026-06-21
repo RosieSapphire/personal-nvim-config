@@ -1,4 +1,4 @@
-local snip = require('rosie.keymap.snippets.funcs')
+local snip = require 'rosie.keymap.snippets.funcs'
 
 snip.bind_create(',cmain', 'com/main')
 snip.bind_create(',cdef', 'com/defines')

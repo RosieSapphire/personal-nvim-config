@@ -1,2 +1,2 @@
-require('rosie.keymap.snippets.codegen')
-require('rosie.keymap.snippets.comments')
+require 'rosie.keymap.snippets.codegen'
+require 'rosie.keymap.snippets.comments'

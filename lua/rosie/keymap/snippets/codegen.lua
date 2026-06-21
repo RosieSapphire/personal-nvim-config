@@ -1,4 +1,4 @@
-local snip = require('rosie.keymap.snippets.funcs')
+local snip = require 'rosie.keymap.snippets.funcs'
 local dir  = snip.get_dir()
 
 snip.bind_create_pragma(',pgcc', 'pragma_gcc')

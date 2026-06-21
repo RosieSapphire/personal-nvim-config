@@ -1,6 +1,6 @@
-require('rosie.keymap.basic')
-require('rosie.keymap.find')
-require('rosie.keymap.coding')
-require('rosie.keymap.snippets')
-require('rosie.keymap.format')
-require('rosie.keymap.git')
+require 'rosie.keymap.basic'
+require 'rosie.keymap.find'
+require 'rosie.keymap.coding'
+require 'rosie.keymap.snippets'
+require 'rosie.keymap.format'
+require 'rosie.keymap.git'

@@ -1,4 +1,4 @@
-local git = require('rosie.git')
+local git = require 'rosie.git'
 
 local function git_keymap(cmd, func)
         vim.keymap.set( 'n', '<leader>g' .. cmd, function()

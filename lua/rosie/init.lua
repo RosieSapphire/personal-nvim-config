@@ -1,6 +1,6 @@
-require('rosie.shell')
-require('rosie.keymap')
-require('rosie.set')
-require('rosie.lazy')
-require('rosie.lsp')
-require('rosie.treesitter')
+require 'rosie.shell'
+require 'rosie.keymap'
+require 'rosie.set'
+require 'rosie.lazy'
+require 'rosie.lsp'
+require 'rosie.treesitter'
