@@ -556,4 +556,81 @@ function M.commit_prompt()
         end)
 end
 
+local function git_tui(args, title)
+        local root = repo_root()
+
+        if not root then
+                return
+        end
+
+        local width  = math.max(40, math.floor(vim.o.columns * 0.85))
+        local height = math.max(10, math.floor(vim.o.lines   * 0.80))
+        local row    = math.floor((vim.o.lines   - height) / 2)
+        local col    = math.floor((vim.o.columns - width)  / 2)
+
+        local buf = vim.api.nvim_create_buf(false, true)
+
+        local win = vim.api.nvim_open_win(buf, true, {
+                relative = 'editor',
+                style    = 'minimal',
+                border   = 'rounded',
+                title    = ' ' .. title .. ' ',
+                title_pos = 'center',
+
+                width  = width,
+                height = height,
+                row    = row,
+                col    = col,
+        })
+
+        vim.bo[buf].bufhidden = 'wipe'
+        vim.bo[buf].swapfile  = false
+
+        local job = vim.fn.jobstart(args, {
+                cwd  = root,
+                term = true,
+
+                on_exit = function(_, code)
+                        vim.schedule(function()
+                                if code ~= 0 then
+                                        vim.notify(
+                                                title .. ' exited with status ' .. code,
+                                                vim.log.levels.ERROR
+                                        )
+                                        return
+                                end
+
+                                if vim.api.nvim_win_is_valid(win) then
+                                        vim.api.nvim_win_close(win, true)
+                                end
+
+                                M.status()
+                        end)
+                end,
+        })
+
+        if job <= 0 then
+                if vim.api.nvim_win_is_valid(win) then
+                        vim.api.nvim_win_close(win, true)
+                end
+
+                vim.notify(
+                        'Unable to start ' .. title,
+                        vim.log.levels.ERROR
+                )
+
+                return
+        end
+
+        vim.cmd.startinsert()
+end
+
+function M.add_patch()
+        git_tui({ 'git', 'add', '-p' }, 'git add -p')
+end
+
+function M.unstage_patch()
+        git_tui({ 'git', 'reset', '-p' }, 'git reset -p')
+end
+
 return M
