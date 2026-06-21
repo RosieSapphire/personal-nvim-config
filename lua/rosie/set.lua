@@ -19,14 +19,9 @@ end
 local git = require('rosie.git')
 
 local function git_keymap(cmd, func, desc)
-        vim.keymap.set(
-                'n',
-                '<leader>g' .. cmd,
-                function()
-                        func()
-                end,
-                { desc = 'Git ' .. desc .. '.' }
-        )
+        vim.keymap.set( 'n', '<leader>g' .. cmd, function()
+                func()
+        end, { desc = "Git " .. desc .. "." })
 end
 
 git_keymap('ac', git.add_current,     'add current file')
@@ -144,13 +139,42 @@ local function grep_find_visual(opts)
 end
 ]]--
 
--- Keybinds for finding a pattern in a file (normal)
-vim.keymap.set('n', '<leader>*h', function() grep_find_normal({ pattern = '**/*.h', imprecise = false }) end)
-vim.keymap.set('n', '<leader>*c', function() grep_find_normal({ pattern = '**/*.c', imprecise = false }) end)
-vim.keymap.set('n', '<leader>*a', function() grep_find_normal({ pattern = '**/*.c **/*.h', imprecise = false }) end)
-vim.keymap.set('n', '<leader>*ih', function() grep_find_normal({ pattern = '**/*.h', imprecise = true }) end)
-vim.keymap.set('n', '<leader>*ic', function() grep_find_normal({ pattern = '**/*.c', imprecise = true }) end)
-vim.keymap.set('n', '<leader>*ia', function() grep_find_normal({ pattern = '**/*.{c,h}', imprecise = true }) end)
+
+vim.keymap.set({ 'n', 'x' }, '<leader>cp', function()
+        vim.api.nvim_feedkeys('"+y', 'n', true)
+end, { desc = "Yank some shit into the system's clipboard." })
+
+vim.keymap.set('n', '<leader>mason', function()
+        vim.cmd('Mason')
+end, { desc = "Open the Mason window (rarely-used, hence long name)." })
+
+vim.keymap.set('n', '<leader>lr', function()
+        vim.cmd('registers')
+end, { desc = "List contents of all registers." })
+
+vim.keymap.set('n', '<leader>*h', function()
+        grep_find_normal({ pattern = '**/*.h', imprecise = false })
+end, { desc = "Find <cword> in all *.h files (normal, strict)." })
+
+vim.keymap.set('n', '<leader>*c', function()
+        grep_find_normal({ pattern = '**/*.c', imprecise = false })
+end, { desc = "Find <cword> in all *.c files (normal, strict)." })
+
+vim.keymap.set('n', '<leader>*a', function()
+        grep_find_normal({ pattern = '**/*.c **/*.h', imprecise = false })
+end, { desc = "Find <cword> in all *.h & *.c files (normal, strict)." })
+
+vim.keymap.set('n', '<leader>*ih', function()
+        grep_find_normal({ pattern = '**/*.h', imprecise = true })
+end, { desc = "Find <cword> in all *.h files (normal, loose)." })
+
+vim.keymap.set('n', '<leader>*ic', function()
+        grep_find_normal({ pattern = '**/*.c', imprecise = true })
+end, { desc = "Find <cword> in all *.c files (normal, loose)." })
+
+vim.keymap.set('n', '<leader>*ia', function()
+        grep_find_normal({ pattern = '**/*.{c,h}', imprecise = true })
+end, { desc = "Find <cword> in all *.h & *.c files (normal, loose)." })
 
 -- Overwrite hte original quickfix formatting so I can make it look less shitty
 function _G.quickfix_custom_format(info)
@@ -203,8 +227,6 @@ end
 
 vim.o.quickfixtextfunc = '{info -> v:lua.quickfix_custom_format(info)}'
 
--- Handy-dandy mouse-ka-tool for listing buffers so I don't have to press
--- an extra fucking key. Such is the way of VIM after all, right? lmao
 vim.keymap.set('n', '<C-e>', function()
         local qf = {}
 
@@ -247,18 +269,23 @@ vim.keymap.set('n', '<C-e>', function()
 
         vim.fn.setqflist({}, 'r', { title = 'Buffers', items = qf })
         vim.cmd('copen')
-end, { desc = 'List currently opened buffers in quickfix' })
+end, { desc = "List all open buffers in quickfix window." })
 
 ----------------------------------------------------------
 -- TODO: I REALLY fucking want a rename variable macro! --
 ----------------------------------------------------------
 
--- And another one for opening and closing the quick-fix panel faster!
-vim.keymap.set('n', '<leader>qo', function() vim.cmd('copen') end)
-vim.keymap.set('n', '<leader>qc', function() vim.cmd('cclose') end)
+vim.keymap.set('n', '<leader>qo', function()
+        vim.cmd('copen')
+end, { desc = "Open quickfix window." })
 
--- Sourcing the current file
-vim.keymap.set('n', '<leader>so', function() vim.cmd('so') end)
+vim.keymap.set('n', '<leader>qc', function()
+        vim.cmd('cclose')
+end, { desc = "Close quickfix window." })
+
+vim.keymap.set('n', '<leader>so', function()
+        vim.cmd('so')
+end, { desc = "Source the current file (used for all *.lua file changes)." })
 
 ----------------------------------------
 -- TODO: Make this work properly. lol --
@@ -335,28 +362,29 @@ local function clang_format_current_buffer()
         vim.api.nvim_win_set_cursor(0, cursor_new)
 end
 
-vim.keymap.set('n', '<leader>fr', function() clang_format_current_buffer() end)
+vim.keymap.set('n', '<leader>fr', function()
+        clang_format_current_buffer()
+end, { desc = "Format current file with clang-format." })
 
--- Save the current buffer to a file
-vim.keymap.set('n', '<leader>w', function() vim.cmd('write') end)
-
--- Shut down the current buffer
-vim.keymap.set('n', '<leader>bd', function() vim.cmd('bd!') end)
-
--- Save the current buffer to a file right after formatting it with clang! :D
 vim.keymap.set('n', '<leader>fw', function()
         clang_format_current_buffer()
         if vim.bo.modified then
                 vim.cmd('write')
         end
-end)
+end, { desc = "Format current file with clang-format and save if changed." })
 
--- Check the make command
+vim.keymap.set('n', '<leader>w', function()
+        vim.cmd('write')
+end, { desc = "Write current file." })
+
+vim.keymap.set('n', '<leader>bd', function()
+        vim.cmd('bd!')
+end, { desc = "Delete current buffer." })
+
 vim.keymap.set('n', '<leader>cmk', function()
         vim.cmd('set makeprg?')
-end, { silent = true })
+end, { desc = "Print the currently set 'makeprg' command.", silent = true })
 
--- Set the make command
 vim.keymap.set('n', '<leader>smk', function()
         local ok, mkprg = pcall(vim.fn.input, 'Make Command Input: ')
 
@@ -365,15 +393,13 @@ vim.keymap.set('n', '<leader>smk', function()
         end
 
         vim.opt.makeprg = mkprg;
-end, { silent = true })
+end, { desc = "Set new 'makeprg' command via prompt.", silent = true })
 
--- Run the make command
 vim.keymap.set('n', '<leader>mk', function()
         vim.cmd('wa') -- Make sure to save all open files before running!
         vim.cmd('make')
-end, { silent = true })
+end, { desc = "Run the 'makeprg' cmd (save all first).", silent = true })
 
--- Close all buffers except current one
 vim.keymap.set('n', '<leader>caec', function()
         local curbuf = vim.api.nvim_get_current_buf()
 
@@ -393,7 +419,7 @@ vim.keymap.set('n', '<leader>caec', function()
                         vim.api.nvim_buf_delete(buf, { force = false })
                 end
         end
-end, { silent = true })
+end, { desc = "Closes all buffers except the one focused.", silent = true })
 
 -- Function for opening all files of (a) certain type(s)
 local function add_project_buffers_of_type(exts)
@@ -421,50 +447,53 @@ local function add_project_buffers_of_type(exts)
         print('Opened ' .. #files .. ' files into buffers!')
 end
 
--- Shortcuts for opening all files of a given type
-vim.keymap.set('n', '<leader>oahcf', function() add_project_buffers_of_type({ 'c', 'h' }) end, { silent = false })
-vim.keymap.set('n', '<leader>oahf', function() add_project_buffers_of_type({ 'h' }) end, { silent = false })
-vim.keymap.set('n', '<leader>oacf', function() add_project_buffers_of_type({ 'c' }) end, { silent = false })
+vim.keymap.set('n', '<leader>oahcf', function()
+        add_project_buffers_of_type({ 'c', 'h' })
+end, { desc = "Opens all *.h & *.c files in pwd.", silent = false  })
+
+vim.keymap.set('n', '<leader>oahf', function()
+        add_project_buffers_of_type({ 'h' })
+end, { desc = "Opens all *.h files in pwd.", silent = false  })
+
+vim.keymap.set('n', '<leader>oacf', function()
+        add_project_buffers_of_type({ 'c' })
+end, { desc = "Opens all *.c files in pwd.", silent = false  })
 
 vim.api.nvim_create_autocmd("FileType", {
         pattern = "qf",
         callback = function()
                 vim.keymap.set("n", "<CR>", function()
                         local idx = vim.fn.line(".") -- current line in qf list
-                        vim.cmd("wincmd p")             -- go back to  orig window
-                        vim.cmd("cc " .. idx)             -- jump to THAT entry
-                        vim.cmd("cclose")                                                -- close quickfix
-                end, { buffer = true })
+                        vim.cmd("wincmd p")          -- go back to  orig window
+                        vim.cmd("cc " .. idx)        -- jump to THAT entry
+                        vim.cmd("cclose")            -- close quickfix
+                end, { desc = "Open file in quickfix menu.", buffer = true })
         end,
 })
 
 local snip_dir = '$HOME/.config/nvim/snippets/'
 
--- Pragma warning diagnostics for GCC
 vim.keymap.set('n', ',pgcc', function()
         local file = vim.fn.expand(snip_dir .. 'pragma_gcc')
         vim.cmd('read ' .. file)
         vim.api.nvim_feedkeys('j$i', 'n', false)
-end, { noremap = true, silent = true })
+end, { desc = "Generate #pragma for GCC.", noremap = true, silent = true })
 
--- Pragma warning diagnostics for clang
 vim.keymap.set('n', ',pcla', function()
         local file = vim.fn.expand(snip_dir .. 'pragma_clang')
         vim.cmd('read ' .. file)
         vim.api.nvim_feedkeys('j$i', 'n', false)
-end, { noremap = true, silent = true })
+end, { desc = "Generate #pragma for clang.", noremap = true, silent = true })
 
--- Just a simple hello world program in C
 vim.keymap.set('n', ',hello', function()
         local file = vim.fn.expand(snip_dir .. 'hello_world')
         vim.cmd("read " .. file)
-end, { noremap = true, silent = true })
+end, { desc = "Generate C hello world code.", noremap = true, silent = true })
 
--- Debug macro for a specific module
 vim.keymap.set('n', ',dbm', function()
         local file = vim.fn.expand(snip_dir .. 'debug_macro')
         vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
+end, { desc = "Generate DEBUGF macro.", noremap = true, silent = true })
 
 -------------------------------------------------------------
 -- SNIPPETS FOR INCLUDE HEADER AND SOURCE SECTION COMMENTS --
@@ -498,7 +527,7 @@ snippet_bind_create(',bast', snip_dir .. 'basic_types')
 vim.keymap.set('n', ',cmain', function()
         local file = vim.fn.expand(snip_dir .. 'com/main')
         vim.cmd('read ' .. file)
-end, { noremap = true, silent = true })
+end, { desc = "Generate main func comment.", noremap = true, silent = true })
 
 -- Generating CTags for code --
 vim.api.nvim_create_user_command('TagsMake', function()
@@ -579,21 +608,18 @@ comment_generate_mapper(',cif', 'FIXME: ', true)
 -- TODO: Create mapper functions for all these too so they clean as FUCK! --
 ----------------------------------------------------------------------------
 
--- Include setup with quotation marks
 vim.keymap.set('n', ',inc', function()
         local file = vim.fn.expand(snip_dir .. '/inc_setup_quote')
         vim.cmd('read ' .. file)
         vim.api.nvim_feedkeys('$hhi', 'n', false)
-end, { noremap = true, silent = true })
+end, { desc = "Generate #include quotes.", noremap = true, silent = true })
 
--- Include setup with angled brackets
 vim.keymap.set('n', ',binc', function()
         local file = vim.fn.expand(snip_dir .. '/inc_setup_angle')
         vim.cmd('read ' .. file)
         vim.api.nvim_feedkeys('$hhi', 'n', false)
-end, { noremap = true, silent = true })
+end, { desc = "Generate #include angles.", noremap = true, silent = true })
 
--- Named header guard
 vim.keymap.set('n', ',hg', function()
         local ok, guard = pcall(vim.fn.input, 'Header Guard Name: ')
         local view      = vim.fn.winsaveview()
@@ -614,7 +640,7 @@ vim.keymap.set('n', ',hg', function()
         })
 
         vim.fn.winrestview(view)
-end, { noremap = true, silent = true })
+end, { desc = "Generate named header-guard.", noremap = true, silent = true })
 
 -- #ifdef & #ifndef with names
 local function ifdef_mode_normal(guard, do_else)
@@ -703,12 +729,7 @@ local function ifdef_macro_mapper(mode, input, guard, do_else)
                 func = ifdef_mode_visual
         end
 
-        vim.keymap.set(
-                mode,
-                input,
-                func(guard, do_else),
-                { silent = true }
-        )
+        vim.keymap.set(mode, input, func(guard, do_else), { silent = true })
 end
 
 ifdef_macro_mapper('n', ',ifd', '#ifdef', false)
@@ -816,37 +837,22 @@ local function unencase_current_line(left, right)
         vim.api.nvim_set_current_line(updated)
 end
 
----------------------------------
--- ENCASING FUNCTIONS (NORMAL) --
----------------------------------
-
--- Comment
 vim.keymap.set('n', ',ec', function()
         encase_current_line('/* ', ' */')
-end, { silent = true })
+end, { desc = "Add /* */ (normal).", silent = true })
 
--- Parenthesis
 vim.keymap.set('n', ',ep', function()
         encase_current_line('(', ')')
-end, { silent = true })
-
-----------------------------------
--- UN-ENCASE FUNCTIONS (NORMAL) --
-----------------------------------
+end, { desc = "Add ( ) (normal).", silent = true })
 
 vim.keymap.set('n', ',uc', function()
         unencase_current_line('/* ', ' */')
-end, { noremap = true, silent = true })
+end, { desc = "Remove /* */ (normal).", noremap = true, silent = true })
 
 vim.keymap.set('n', ',up', function()
         unencase_current_line('(', ')')
-end, { noremap = true, silent = true })
+end, { desc = "Remove ( ) (normal).", noremap = true, silent = true })
 
----------------------------------
--- ENCASING FUNCTIONS (VISUAL) --
----------------------------------
-
--- Comment
 vim.keymap.set('x', ',ec', function()
         local line_a = vim.fn.line('v')
         local line_b = vim.fn.line('.')
@@ -875,11 +881,7 @@ vim.keymap.set('x', ',ec', function()
                 'n',
                 false
         )
-end, { noremap = true, silent = true })
-
--------------------------------
--- PARTIAL ENCASING (VISUAL) --
--------------------------------
+end, { desc = "Add /* */ (visual).", noremap = true, silent = true })
 
 vim.keymap.set('x', ',ep', function()
         vim.api.nvim_input('<Esc>')
@@ -887,11 +889,7 @@ vim.keymap.set('x', ',ep', function()
         vim.schedule(function()
                 encase_visual_select('(', ')')
         end)
-end, { noremap = true, silent = true })
-
----------------------------------
--- PARTIAL UNENCASING (VISUAL) --
----------------------------------
+end, { desc = "Add ( ) (visual).", noremap = true, silent = true })
 
 vim.keymap.set('x', ',uc', function()
         vim.api.nvim_input('<Esc>')
@@ -899,7 +897,7 @@ vim.keymap.set('x', ',uc', function()
         vim.schedule(function()
                 unencase_visual_select('/* ', ' */')
         end)
-end, { noremap = true, silent = true })
+end, { desc = "Remove /* */ (visual).", noremap = true, silent = true })
 
 vim.keymap.set('x', ',up', function()
         vim.api.nvim_input('<Esc>')
@@ -907,7 +905,7 @@ vim.keymap.set('x', ',up', function()
         vim.schedule(function()
                 unencase_visual_select('(', ')')
         end)
-end, { noremap = true, silent = true })
+end, { desc = "Remove ( ) (visual).", noremap = true, silent = true })
 
 -- Lines & Numbers --
 vim.opt.number         = true
