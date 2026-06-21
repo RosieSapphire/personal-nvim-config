@@ -141,7 +141,6 @@ local function grep_find_visual(opts)
 end
 ]]--
 
-
 vim.keymap.set({ 'n', 'x' }, '<leader>cp', function()
         vim.api.nvim_feedkeys('"+y', 'n', true)
 end, { desc = "Yank some shit into the system's clipboard." })
