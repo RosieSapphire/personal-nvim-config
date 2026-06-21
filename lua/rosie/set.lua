@@ -1,3 +1,10 @@
+-- Undo Persistence --
+local undodir = vim.fn.stdpath('state') .. '/undo'
+
+vim.fn.mkdir(undodir, 'p')
+vim.opt.undofile = true
+vim.opt.undodir  = undodir
+
 -- Lines & Numbers --
 vim.opt.number         = true
 vim.opt.relativenumber = true
