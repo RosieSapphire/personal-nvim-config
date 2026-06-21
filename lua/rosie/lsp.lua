@@ -11,6 +11,13 @@ vim.lsp.config('lua_ls', {
 		'selene.yml',
 		'.git',
 	},
+        settings = {
+                Lua = {
+                        diagnostics = {
+                                globals = { 'vim' }
+                        }
+                }
+        }
 })
 
 vim.lsp.enable('lua_ls')
@@ -49,7 +56,7 @@ vim.lsp.config('clangd', {
 		vim.api.nvim_buf_create_user_command(bufnr, 'LspClangdShowSymbolInfo', function()
 			symbol_info(bufnr, client)
 		end, { desc = 'Show symbol info' })
-	end,
+	end
 })
 
 vim.lsp.enable('clangd')
