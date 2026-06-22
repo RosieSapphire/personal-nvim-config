@@ -10,11 +10,7 @@ snip.bind_create('n', ',inc', 'inc_setup_quote', '$hhi')
 snip.bind_create('n', ',binc', 'inc_setup_angle', '$hhi')
 
 vim.keymap.set('n', ',hg', function()
-        local ok, guard = pcall(
-                vim.fn.input,
-                'Header Guard Name: ',
-                'nothing'
-        )
+        local ok, guard = pcall(vim.fn.input, 'Header Guard Name: ')
 
         local view = vim.fn.winsaveview()
 
@@ -33,11 +29,7 @@ end, { desc = "Generate named header-guard.", noremap = true, silent = true })
 -- #ifdef & #ifndef with names
 local function ifdef_mode_normal(guard, do_else)
         return function()
-                local ok, name = pcall(
-                        vim.fn.input,
-                        guard .. ': ',
-                        'nothing'
-                )
+                local ok, name = pcall(vim.fn.input, guard .. ': ', '')
 
                 local real_g = ''
 
@@ -76,11 +68,7 @@ local function ifdef_mode_visual(guard, do_else)
         return function()
                 local line_a     = vim.fn.line('v')
                 local line_b     = vim.fn.line('.')
-                local ok, name   = pcall(
-                        vim.fn.input,
-                        guard .. ': ',
-                        'nothing'
-                )
+                local ok, name   = pcall(vim.fn.input, guard .. ': ', '')
 
                 local real_g = ''
 
