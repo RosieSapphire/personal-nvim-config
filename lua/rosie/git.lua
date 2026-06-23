@@ -558,6 +558,29 @@ function M.commit_prompt()
         end)
 end
 
+function M.commit_prompt_amend()
+        local ok, msg = pcall(vim.fn.input, 'Amend previous message: ', '', 'file')
+
+        if not ok or msg == '' then
+                return
+        end
+
+        if not msg or msg == '' then
+                return
+        end
+
+        git({ 'commit', '--amend', '-m', msg }, function(out)
+                local text = out.stdout .. out.stderr
+
+                if out.code ~= 0 then
+                        scratch('git commit failed', 'git', text)
+                        return
+                end
+
+                scratch('git commit', 'git', text)
+        end)
+end
+
 local function git_tui(args, title)
         local root = repo_root()
 
