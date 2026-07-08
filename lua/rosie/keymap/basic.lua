@@ -36,10 +36,6 @@ bind_cmd_simple('<leader>w', 'write')
 
 ------------------------------------------------------------------------------
 
-local function buf_get_name(buf)
-        return vim.api.nvim_buf_get_name(buf)
-end
-
 local function buf_is_existing_file(buf)
         if not vim.api.nvim_buf_is_valid(buf) then
                 return false
@@ -50,7 +46,7 @@ local function buf_is_existing_file(buf)
                 return false
         end
 
-        local name = buf_get_name(buf)
+        local name = vim.api.nvim_buf_get_name(buf)
         if name == '' then
                 return false
         end
@@ -74,7 +70,7 @@ local function buf_save_if_existing_file(buf)
                 return true
         end
 
-        local name = buf_get_name(buf)
+        local name = vim.api.nvim_buf_get_name(buf)
 
         local ok, err = pcall(function()
                 vim.api.nvim_buf_call(buf, function()
