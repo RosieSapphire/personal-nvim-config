@@ -75,7 +75,7 @@ vim.api.nvim_create_user_command('TagsMake', function()
                            vim.log.levels.ERROR);
                 return;
         end
-        
+
         vim.fn.jobstart({'ctags', '-R', '.'}, {
         on_exit =
                 function(_, code) if 0 ~= code then vim.notify("ERROR: Failed to generate CTags!",
