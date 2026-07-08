@@ -130,6 +130,18 @@ local function get_windows_using_buf(buf)
         return wins
 end
 
+local function get_bufs_used_in_open_windows()
+        local shown = {}
+
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+                if vim.api.nvim_win_is_valid(win) then
+                        shown[vim.api.nvim_win_get_buf(win)] = true
+                end
+        end
+
+        return shown
+end
+
 local function buf_cur_and_window_cur_del()
         local buf = vim.api.nvim_get_current_buf()
 
@@ -169,22 +181,23 @@ vim.keymap.set('n', '<leader>bd', buf_cur_and_window_cur_del, {
 })
 
 vim.keymap.set('n', '<leader>caec', function()
-        local curbuf = vim.api.nvim_get_current_buf()
+        --------------------------------------------------------
+        -- Create a set of "protected" buffers that don't get --
+        -- deleted when the rest of them get fucken' nuked.   --
+        --------------------------------------------------------
+        local bufs_keep = get_bufs_used_in_open_windows()
 
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-                if buf ~= curbuf
-                and vim.bo[buf].buflisted
-                and vim.bo[buf].buftype == ''
-                then
-                        -- Make sure to save the buffer if we need to.
-                        if vim.bo[buf].modified then
-                                vim.api.nvim_buf_call(buf, function()
-                                        vim.cmd('write')
-                                end)
-                        end
+                local buf_is_normal =
+                        vim.api.nvim_buf_is_valid(buf)
+                    and vim.bo[buf].buflisted
+                    and vim.bo[buf].buftype == ''
 
-                        -- Delete the buffer itself
-                        vim.api.nvim_buf_delete(buf, { force = false })
+                -- Only delete NORMAL buffers that are NOT protected.
+                if buf_is_normal and not bufs_keep[buf] then
+                        if buf_save_if_existing_file(buf) then
+                                buf_del_force(buf)
+                        end
                 end
         end
-end, { desc = "Closes all buffers except the one focused.", silent = true })
+end, { desc = "Closes all buffers except visible ones.", silent = true })
