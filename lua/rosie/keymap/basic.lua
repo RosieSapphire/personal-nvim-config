@@ -73,9 +73,8 @@ local function buf_is_existing_file(buf)
 end
 
 ------------------------------------------------------------------------------
--- FIXME: This is kinda cringe because I don't give a fuck if it errored    --
---        _nearly_ as much as I want the fucking array of all the files     --
---        that were saved in this process. I'll have to restructure soon... --
+-- FIXME: I actually just fucken' realized that what I _actually_ want is --
+--        for this function to return if the file actually saved! xD      --
 ------------------------------------------------------------------------------
 local function buf_save_if_existing_file(buf)
         if not vim.api.nvim_buf_is_valid(buf) then
