@@ -28,12 +28,12 @@ vim.keymap.set('n', '<leader>so', function()
         vim.cmd('so')
 end, { desc = "Source the current file (used for all *.lua file changes)." })
 
-vim.keymap.set('n', '<leader>msg', '<cmd>messages<CR>', {
+vim.keymap.set('n', '<leader>msgo', '<cmd>messages<CR>', {
         desc   = "Bring up the 'message history' menu.",
         silent = true
 })
 
-vim.keymap.set('n', '<leader>cms', '<cmd>messages clear<CR>', {
+vim.keymap.set('n', '<leader>msgc', '<cmd>messages clear<CR>', {
         desc   = "Clear out the 'message history' menu.",
         silent = true
 })
