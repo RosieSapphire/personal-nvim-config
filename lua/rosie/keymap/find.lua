@@ -52,6 +52,17 @@ vim.keymap.set('n', '<leader>*a', function()
         grep_find_normal({ pattern = '**/*.c **/*.h', imprecise = false })
 end, { desc = "Find <cword> in all *.h & *.c files (normal, strict)." })
 
+------------------------------------------------------------------------------
+-- TODO: Eventually implement this function properly. I want it to be able  --
+--       to find any type of file format within the current directory! :D   --
+------------------------------------------------------------------------------
+--[[
+vim.keymap.set('n', '<leader>*f', function()
+        local ext = vim.fn.input();
+        grep_find_normal({ pattern = '**/*.c **/*.h', imprecise = false })
+end, { desc = "Find <cword> in all *.h & *.c files (normal, strict)." })
+]]--
+
 vim.keymap.set('n', '<leader>*ih', function()
         grep_find_normal({ pattern = '**/*.h', imprecise = true })
 end, { desc = "Find <cword> in all *.h files (normal, loose)." })
