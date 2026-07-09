@@ -191,13 +191,74 @@ vim.keymap.set('n', '<leader>bd', buf_cur_and_window_cur_del, {
         desc = "Save buf to existing file, close it AND it's window(s) too."
 })
 
+------------------------------------------------------------------------------
+-- TODO: This is the first function I wrote that has actual fucken' details --
+--       about what it's doing every step of the process.                   --
+--                                                                          --
+--       This is really great, but I want to be able to turn on and off the --
+--       debug information like how I would in C to make it controllabel!   --
+------------------------------------------------------------------------------
 vim.keymap.set('n', '<leader>caec', function()
+        --[[
+        vim.notify(
+                "[CLOSE ALL EXCEPT CURRENT] <leader>caec:",
+                vim.log.levels.INFO
+        )
+        ]]--
+
         --------------------------------------------------------
         -- Create a set of "protected" buffers that don't get --
         -- deleted when the rest of them get fucken' nuked.   --
         --------------------------------------------------------
         local bufs_keep = get_bufs_used_in_open_windows()
+        -- local left      = {}
 
+        -- vim.notify("\tDeleting all buffers not currently used by window.")
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                local buf_is_normal = vim.api.nvim_buf_is_valid(buf)
+                                  and vim.bo[buf].buflisted
+                                  and vim.bo[buf].buftype == ''
+
+                -- Only delete VISIBLE, NORMAL buffers that are NOT protected.
+                if buf_is_normal then
+                        if not bufs_keep[buf] then
+                                --[[
+                                vim.notify(
+                                        "\t\t" .. buf ..
+                                        " [ name = { \"" ..
+                                        vim.api.nvim_buf_get_name(buf) ..
+                                        "\" } ]",
+                                        vim.log.levels.INFO
+                                );
+                                ]]--
+                                if buf_save_if_existing_file(buf) then
+                                        buf_del_force(buf)
+                                end
+                        --[[
+                        else
+                                table.insert(left, buf)
+                        ]]--
+                        end
+                end
+        end
+
+        --[[
+        vim.notify(
+                "\tWe were left with " .. #left .. " buffers after cleanup.",
+                vim.log.levels.INFO
+        );
+        for _, buf in ipairs(left) do
+                vim.notify(
+                        "\t\t" .. buf ..
+                        " [ name = { \"" .. vim.api.nvim_buf_get_name(buf) ..
+                        "\" } ]",
+                        vim.log.levels.INFO
+                );
+        end
+        ]]--
+end, { desc = "Closes all buffers except visible ones.", silent = true })
+
+vim.keymap.set('n', '<leader>caeb', function()
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
                 local buf_is_normal =
                         vim.api.nvim_buf_is_valid(buf)
@@ -211,4 +272,3 @@ vim.keymap.set('n', '<leader>caec', function()
                         end
                 end
         end
-end, { desc = "Closes all buffers except visible ones.", silent = true })
