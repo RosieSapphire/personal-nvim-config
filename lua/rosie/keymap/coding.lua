@@ -83,21 +83,6 @@ vim.api.nvim_create_user_command('TagsMake', function()
         })
 end, {})
 
-local function escape_lua_pattern(str)
-        return str:gsub('([^%w])', '%%%1')
-end
-
-local function encase_current_line(left, right)
-        local line = vim.api.nvim_get_current_line()
-
-        local indent  = line:match('^%s*') or ''
-        local content = line:sub(#indent + 1)
-
-        vim.api.nvim_set_current_line(
-                indent .. left .. content .. right
-        )
-end
-
 local function encase_visual_select(left, right)
         local pos_a = vim.fn.getpos("'<")
         local pos_b = vim.fn.getpos("'>")
@@ -164,36 +149,6 @@ local function unencase_visual_select(left, right)
 
         vim.api.nvim_buf_set_lines(0, row - 1, row, false, { updated })
 end
-
-local function unencase_current_line(left, right)
-        local line = vim.api.nvim_get_current_line()
-
-        local pat_left  = escape_lua_pattern(left)
-        local pat_right = escape_lua_pattern(right)
-
-        local pattern = '^(%s*)' .. pat_left .. '(.-)' .. pat_right .. '%s*$'
-
-        local updated = line:gsub(pattern, '%1%2')
-
-        vim.api.nvim_set_current_line(updated)
-end
-
-local function bind_encase_func_normal(bind, open, close)
-        vim.keymap.set('n', bind, function()
-                encase_current_line(open, close)
-        end, { silent = true })
-end
-
-local function bind_unencase_func_normal(bind, open, close)
-        vim.keymap.set('n', bind, function()
-                unencase_current_line(open, close)
-        end, { silent = true })
-end
-
-bind_encase_func_normal(',ec', '/* ', ' */')
-bind_encase_func_normal(',ep', '(', ')')
-bind_unencase_func_normal(',uc', '/* ', ' */')
-bind_unencase_func_normal(',up', '(', ')')
 
 ---------------------------------------------------------------
 -- TODO: These should probably have their own wrappers, too. --
