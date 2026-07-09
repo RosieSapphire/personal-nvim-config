@@ -255,6 +255,18 @@ vim.keymap.set('n', '<leader>caec', function()
         end
 end, { desc = "Closes all buffers except visible ones.", silent = true })
 
+------------------------------------------------------------------------------
+-- FIXME: There is one caveat with this. See, this specifically targets     --
+--        no-name buffers to delete them. However, if I'm using one as a    --
+--        fucking scratch pad and accidentally run this command without     --
+--        saving it first, I will lose everything I wrote in that fucken'   --
+--        buffer.
+--
+--        That really _shouldn't_ be a problem (said everbody whom it ended --
+--        up being a problem for ever), but if I were to fix this, I would  --
+--        just ALSO check— in addition to the buffer having no name— that   --
+--        the actual buffer's contents are empty.                           --
+------------------------------------------------------------------------------
 vim.keymap.set('n', '<leader>caeb', function()
         vim.notify("[CLOSE ALL EMPTY BUFFERS] <leader>caeb:", vim.log.levels.INFO)
 
