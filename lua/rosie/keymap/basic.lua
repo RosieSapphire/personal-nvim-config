@@ -33,7 +33,7 @@ vim.keymap.set('n', '<leader>msg', '<cmd>messages<CR>', {
         silent = true
 })
 
-vim.keymap.set('n', '<leader>msc', '<cmd>messages clear<CR>', {
+vim.keymap.set('n', '<leader>cms', '<cmd>messages clear<CR>', {
         desc   = "Clear out the 'message history' menu.",
         silent = true
 })
