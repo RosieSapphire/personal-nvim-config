@@ -28,6 +28,16 @@ vim.keymap.set('n', '<leader>so', function()
         vim.cmd('so')
 end, { desc = "Source the current file (used for all *.lua file changes)." })
 
+vim.keymap.set('n', '<leader>msg', '<cmd>messages<CR>', {
+        desc   = "Bring up the 'message history' menu.",
+        silent = true
+})
+
+vim.keymap.set('n', '<leader>msc', '<cmd>messages clear<CR>', {
+        desc   = "Clear out the 'message history' menu.",
+        silent = true
+})
+
 local function bind_cmd_simple(keys, cmd)
         vim.keymap.set('n', keys, function() vim.cmd(cmd) end, {})
 end
