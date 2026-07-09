@@ -38,6 +38,11 @@ vim.keymap.set('n', '<leader>msgc', '<cmd>messages clear<CR>', {
         silent = true
 })
 
+vim.keymap.set('n', '<leader>pwd', '<cmd>pwd<CR>', {
+        desc   = "Print out the user's current working directory.",
+        silent = true
+})
+
 local function bind_cmd_simple(keys, cmd)
         vim.keymap.set('n', keys, function() vim.cmd(cmd) end, {})
 end
