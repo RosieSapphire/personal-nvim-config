@@ -16,7 +16,7 @@ local function bind_term_gen_cmd(mv_key, rel_pos_str)
                 return
         end
 
-        vim.keymap.set('n', '<C-t>' .. mv_key, function()
+        vim.keymap.set('n', '<leader>t' .. mv_key, function()
                 -- Only create a new window if we don't want it in the
                 -- window we already have selected in the program.
                 if mv_key ~= 'c' then
