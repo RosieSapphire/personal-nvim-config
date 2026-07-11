@@ -7,7 +7,7 @@ function M.bind_create(mode, keybind, path, keys)
                 local file = vim.fn.expand(dir .. path)
                 vim.cmd("read " .. file)
                 if keys ~= '' then
-                        vim.api.nvim_feedkeys(keys, 'n', false)
+                        vim.api.nvim_feedkeys(keys, 'n', true)
                 end
         end, { noremap = true, silent = true })
 end
