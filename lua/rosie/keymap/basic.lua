@@ -1,5 +1,44 @@
 vim.g.mapleader = ' '
 
+local function bind_term_gen_cmd(mv_key, rel_pos_str)
+        -------------------------------------------------------------
+        -- FIXME: Looks fucken' cringe, but I don't care too much. --
+        -------------------------------------------------------------
+        if mv_key ~= 'h' and
+           mv_key ~= 'j' and
+           mv_key ~= 'k' and
+           mv_key ~= 'l' and
+           mv_key ~= 'c' then
+                vim.notify(
+                        "ERROR: Bad move_key input: \"" .. mv_key .."\".",
+                        vim.log.levels.ERROR
+                )
+                return
+        end
+
+        vim.keymap.set('n', '<C-t>' .. mv_key, function()
+                -- Only create a new window if we don't want it in the
+                -- window we already have selected in the program.
+                if mv_key ~= 'c' then
+                        vim.cmd('wincmd n')
+                        vim.cmd('wincmd ' .. string.upper(mv_key))
+                end
+
+                vim.cmd('terminal')
+
+                vim.notify(
+                        "Created a new terminal window " .. rel_pos_str,
+                        vim.log.levels.INFO
+                )
+        end, { desc = "Open new terminal " .. rel_pos_str .. "." })
+end
+
+bind_term_gen_cmd('h', 'to the left')
+bind_term_gen_cmd('l', 'to the right')
+bind_term_gen_cmd('j', 'down below')
+bind_term_gen_cmd('k', 'up above')
+bind_term_gen_cmd('c', 'in current window')
+
 vim.keymap.set('n', '<leader>pv', function()
         vim.cmd.Ex()
 end, { desc="Open Vim's file browser (newrt)." })
