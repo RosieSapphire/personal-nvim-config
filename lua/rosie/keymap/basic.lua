@@ -39,9 +39,15 @@ bind_term_gen_cmd('j', 'down below')
 bind_term_gen_cmd('k', 'up above')
 bind_term_gen_cmd('c', 'in current window')
 
+-- It's fucking retarded that Vim doesn't fucking do this already.
+vim.keymap.set('n', '<C-w>N', function()
+        vim.cmd('wincmd n')
+        vim.cmd('wincmd L') -- Right is most common placement for me at least.
+end, { desc = "Open new window horizontally" })
+
 vim.keymap.set('n', '<leader>pv', function()
         vim.cmd.Ex()
-end, { desc="Open Vim's file browser (newrt)." })
+end, { desc = "Open Vim's file browser (newrt)." })
 
 vim.keymap.set({ 'n', 'x' }, '<leader>cp', function()
         vim.api.nvim_feedkeys('"+y', 'n', true)
