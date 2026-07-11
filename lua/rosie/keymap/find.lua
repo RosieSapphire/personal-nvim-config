@@ -79,10 +79,6 @@ vim.keymap.set('n', '<C-e>', function()
         local qf = {}
 
         for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-                ------------------------------------------------------------
-                -- FIXME: This indentation is ugly and I'd like to invert --
-                --        the conditional statement to be prettier. qwq   --
-                ------------------------------------------------------------
                 if 0 ~= vim.fn.buflisted(bufnr) then
                         -- Get the name of the buffer from the number
                         local name = vim.fn.fnamemodify(
