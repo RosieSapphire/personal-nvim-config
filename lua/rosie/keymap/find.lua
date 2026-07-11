@@ -23,7 +23,7 @@ local function grep_find_normal(opts)
         -- there are no results, print a message saying so!
         if not vim.tbl_isempty(vim.fn.getqflist()) then
                 -- This is the success condition!
-                vim.cmd('copen')
+                vim.cmd('botright copen')
                 return
         end
 
@@ -112,7 +112,7 @@ vim.keymap.set('n', '<C-e>', function()
         end
 
         vim.fn.setqflist({}, 'r', { title = 'Buffers', items = qf })
-        vim.cmd('copen')
+        vim.cmd('botright copen')
 end, { desc = "List all open buffers in quickfix window." })
 
 vim.api.nvim_create_autocmd("FileType", {

@@ -62,7 +62,7 @@ vim.keymap.set('n', '<leader>lr', function()
 end, { desc = "List contents of all registers." })
 
 vim.keymap.set('n', '<leader>qo', function()
-        vim.cmd('copen')
+        vim.cmd('botright copen')
 end, { desc = "Open quickfix window." })
 
 vim.keymap.set('n', '<leader>qc', function()

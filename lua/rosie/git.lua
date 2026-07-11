@@ -69,7 +69,7 @@ local function qf(title, items)
                 items = items,
         })
 
-        vim.cmd('copen')
+        vim.cmd('botright copen')
 end
 
 local function scratch(title, filetype, text)
