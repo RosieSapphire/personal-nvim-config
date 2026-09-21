@@ -67,20 +67,49 @@ vim.keymap.set('n', '<leader>oacf', function()
         add_project_buffers_of_type({ 'c' })
 end, { desc = "Opens all *.c files in pwd.", silent = false  })
 
+local tags_job = nil
+
 vim.api.nvim_create_user_command('TagsMake', function()
-        if 0 == vim.fn.executable('ctags') then
-                vim.notify("ERROR: `ctags` is not an executable " ..
-                           "on this system. Please install it via " ..
-                           "your distro's package manager!",
+        if 0 == vim.fn.executable('ctags-universal') then
+                vim.notify("ERROR: `ctags-universal` is not an " ..
+                           "executable on this system. Please install " ..
+                           "it via your distro's package manager!",
                            vim.log.levels.ERROR);
                 return;
         end
 
-        vim.fn.jobstart({'ctags', '-R', '.'}, {
-        on_exit =
-                function(_, code) if 0 ~= code then vim.notify("ERROR: Failed to generate CTags!",
-                                                               vim.log.levels.ERROR) end end
+        if nil ~= tags_job then
+                vim.notify(
+                        "CTags generation is already running! " ..
+                        "Wait, you fucking impatient invalid!",
+                        vim.log.levels.WARN
+                )
+                return
+        end
+
+        local cwd = vim.fn.getcwd();
+
+        tags_job = vim.fn.jobstart({'ctags-universal', '-R', '.'}, {
+                cwd     = cwd,
+                on_exit = function(_, code)
+                        tags_job = nil;
+
+                        if 0 ~= code then
+                                vim.notify("ERROR: Failed to generate CTags!",
+                                           vim.log.levels.ERROR)
+                                return;
+                        end
+
+                        vim.notify("CTags generated successfully in: " .. cwd,
+                                   vim.log.levels.INFO)
+                end,
         })
+
+        if tags_job <= 0 then
+                tags_job = nil;
+                vim.notify("ERROR: Failed to start CTags!",
+                           vim.log.levels.ERROR)
+        end
 end, {})
 
 local function encase_visual_select(left, right)
