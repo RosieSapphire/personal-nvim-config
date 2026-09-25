@@ -24,8 +24,8 @@ local function bind_term_gen_cmd(mv_key, rel_pos_str)
                         vim.cmd('wincmd ' .. string.upper(mv_key))
                 end
 
-                vim.cmd('terminal')
-                vim.api.nvim_feedkeys('A', 'n', true); -- Enter terminal.
+                vim.cmd('terminal')                    -- Spawn the terminal.
+                vim.api.nvim_feedkeys('A', 'n', true); -- Enter into it.
 
                 vim.notify(
                         "Created a new terminal window " .. rel_pos_str,
