@@ -24,8 +24,8 @@ local function bind_term_gen_cmd(mv_key, rel_pos_str)
                         vim.cmd('wincmd ' .. string.upper(mv_key))
                 end
 
-                vim.cmd('terminal')                    -- Spawn the terminal.
-                vim.api.nvim_feedkeys('A', 'n', true); -- Enter into it.
+                vim.cmd('terminal')                   -- Spawn the terminal.
+                vim.api.nvim_feedkeys('A', 'n', true) -- Enter into it.
 
                 vim.notify(
                         "Created a new terminal window " .. rel_pos_str,
@@ -282,7 +282,7 @@ vim.keymap.set('n', '<leader>caec', function()
                                                 "\t\tRemoved buffer " ..
                                                 buf .. ".",
                                                 vim.log.levels.INFO
-                                        );
+                                        )
                                 end
                         end
                 end
@@ -292,12 +292,12 @@ vim.keymap.set('n', '<leader>caec', function()
                 vim.notify(
                         "Removed " .. #nuked .. " unfocused buffers.",
                         vim.log.levels.INFO
-                );
+                )
         else
                 vim.notify(
                         "No unfocused buffers to remove.",
                         vim.log.levels.INFO
-                );
+                )
         end
 end, { desc = "Closes all buffers except visible ones.", silent = true })
 
