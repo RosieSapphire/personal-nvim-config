@@ -31,6 +31,37 @@ local function bind_term_gen_cmd(mv_key, rel_pos_str)
                         "Created a new terminal window " .. rel_pos_str,
                         vim.log.levels.INFO
                 )
+
+                -- Extra step for a _VERY_ specific fucking reason. See, 99%
+                -- of what I use NeoVim (or just Vim at all for that matter)
+                -- is for fucking coding in C! God's motherfucking language!
+                -- Now, the thing about my workflow is that I have code on the
+                -- left and then a terminal on the right for compiling and
+                -- reading debug log outputs and all that fucken' lovely shit.
+                --
+                -- The thing about that is, I have an 80-char column bar at
+                -- the right of my code thing, and I always perfer to have
+                -- that lined up with the edge of my terminal so that I can
+                -- maximize space usage for all my motherfucking shit to get
+                -- better outputs! >:D
+                --
+                -- Now, the problem with doing it this retarded-ass fucking
+                -- way is that this _only_ works on the screen that I am
+                -- currently writing _this_ fucking crap on, so the absolutely
+                -- last thing it is is portable.
+                --
+                -- That being said, it's good enough for me for now, so I'm
+                -- not gonna bitch about it too much, and neither should you!
+                --
+                -- :D <3
+
+                if mv_key ~= 'l' then
+                        return
+                end
+
+                vim.api.nvim_feedkeys(
+                        vim.keycode([[<C-\><C-n><C-w>10>A]]), 'n', true
+                )
         end, { desc = "Open new terminal " .. rel_pos_str .. "." })
 end
 
