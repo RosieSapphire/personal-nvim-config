@@ -1,4 +1,5 @@
 require 'rosie.keymap.basic'
+require 'rosie.keymap.buffers'
 require 'rosie.keymap.find'
 require 'rosie.keymap.coding'
 require 'rosie.keymap.snippets'

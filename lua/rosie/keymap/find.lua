@@ -115,7 +115,9 @@ vim.keymap.set('n', '<C-e>', function()
         vim.cmd('botright copen')
 end, { desc = "List all open buffers in quickfix window." })
 
+local qf_group = vim.api.nvim_create_augroup("RosieQuickfix", { clear = true })
 vim.api.nvim_create_autocmd("FileType", {
+        group = qf_group,
         pattern = "qf",
         callback = function()
                 vim.keymap.set("n", "<CR>", function()

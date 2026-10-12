@@ -31,7 +31,9 @@ vim.diagnostic.config({
         float = { border = 'rounded', focusable = false }
 })
 
+local diagnostic_group = vim.api.nvim_create_augroup('RosieDiagnostics', { clear = true })
 vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+        group = diagnostic_group,
         pattern  = '*',
         callback = function()
                 vim.diagnostic.open_float(nil, { focus = false })
