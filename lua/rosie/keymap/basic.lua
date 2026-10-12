@@ -97,7 +97,7 @@ vim.keymap.set('n', '<leader>qo', function()
         vim.cmd('botright copen')
 end, { desc = "Open quickfix window." })
 
-vim.keymap.set('n', '<leader>qc', function()
+vim.keymap.set('n', '<leader>qq', function()
         vim.cmd('cclose')
 end, { desc = "Close quickfix window." })
 
