@@ -22,6 +22,7 @@ vim.opt.autoindent  = true
 vim.opt.scrolloff   = 8
 vim.opt.signcolumn  = 'yes' -- Figure out what this does
 vim.opt.colorcolumn = '78'
+vim.opt.textwidth   = 78
 
 -- Diagnostics --
 vim.diagnostic.config({
