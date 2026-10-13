@@ -117,10 +117,21 @@ function M.format_current_buffer()
 end
 
 function M.format_and_write_current_buffer()
-        if not M.format_current_buffer() then
+        local buf = vim.api.nvim_get_current_buf()
+        if vim.bo[buf].buftype ~= '' or not vim.bo[buf].modifiable then
+                vim.notify('This buffer cannot be saved as a normal file.', vim.log.levels.WARN)
                 return false
         end
-        if vim.bo.modified then
+
+        -- Skipping an inapplicable formatter is NOT a save failure.
+        -- Formatting errors in C-family buffers, however, stop the write.
+        if format_filetypes[vim.bo[buf].filetype] then
+                if not M.format_current_buffer() then
+                        return false
+                end
+        end
+
+        if vim.bo[buf].modified then
                 local ok, err = pcall(vim.cmd, 'write')
                 if not ok then
                         vim.notify('Unable to save buffer: ' .. tostring(err), vim.log.levels.ERROR)
@@ -134,7 +145,7 @@ vim.keymap.set('n', '<leader>fr', M.format_current_buffer, {
         desc = 'Format C-family buffer with clang-format',
 })
 vim.keymap.set('n', '<leader>fw', M.format_and_write_current_buffer, {
-        desc = 'Format C-family buffer, then save on success',
+        desc = 'Format C-family buffer when applicable, then save',
 })
 
 -- These deliberate text wrappers are not replaced by native comment toggles:
