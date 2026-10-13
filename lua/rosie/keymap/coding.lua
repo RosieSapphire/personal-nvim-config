@@ -1,6 +1,6 @@
-----------------------------------------------------------
--- TODO: I REALLY fucking want a rename variable macro! --
-----------------------------------------------------------
+vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, {
+        desc = 'Rename symbol with LSP',
+})
 
 vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", {
         noremap = true, silent = true
