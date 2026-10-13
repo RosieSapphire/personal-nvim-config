@@ -13,7 +13,20 @@ end
 
 -- Keep the old policy: only auto-write modified, named, existing files.
 -- If we cannot write them, or if a buffer is new/unnamed, DON'T DELETE IT.
-local function prepare_to_delete(buf)
+-- Only the explicit, foreground close commands can ask to discard an
+-- unsaved unnamed scratch buffer. Headless/background cleanup never prompts.
+local function confirm_discard(buf)
+        if #vim.api.nvim_list_uis() == 0 then
+                warn('Modified unnamed buffer ' .. buf .. ' left untouched (no UI for confirmation).')
+                return false
+        end
+        return vim.fn.confirm(
+                'Discard unsaved changes in [No Name] buffer ' .. buf .. '?',
+                '&No\n&Discard', 1
+        ) == 2
+end
+
+local function prepare_to_delete(buf, interactive)
         if not is_normal_buffer(buf) then
                 warn('Buffer ' .. buf .. ' is not a normal file buffer; left untouched.')
                 return false
@@ -25,7 +38,12 @@ local function prepare_to_delete(buf)
 
         local name = vim.api.nvim_buf_get_name(buf)
         if name == '' then
-                warn('Buffer ' .. buf .. ' has unsaved contents and no filename; left untouched.')
+                if interactive and confirm_discard(buf) then
+                        return true, true -- second result authorizes explicit force
+                end
+                if not interactive then
+                        warn('Buffer ' .. buf .. ' has unsaved contents and no filename; left untouched.')
+                end
                 return false
         end
 
@@ -53,9 +71,11 @@ local function prepare_to_delete(buf)
         return true
 end
 
-local function delete_buffer(buf)
-        -- Deliberately not :bdelete! (which discards changes).
-        local ok, err = pcall(vim.cmd, 'bdelete ' .. tostring(buf))
+local function delete_buffer(buf, discard_confirmed)
+        -- Only explicitly confirmed unnamed buffers may use force. Everything
+        -- else uses normal :bdelete protections, including BufDelete handlers.
+        local cmd = discard_confirmed and 'bdelete! ' or 'bdelete '
+        local ok, err = pcall(vim.cmd, cmd .. tostring(buf))
         if not ok then
                 vim.notify('Failed to delete buffer ' .. buf .. ':\n' .. tostring(err), vim.log.levels.ERROR)
                 return false
@@ -81,10 +101,78 @@ local function scratch_buffer()
         return buf
 end
 
+-- Auxiliary buffers are windows/views, not ordinary files. Closing a
+-- terminal VIEW must not intentionally terminate its running job.
+local function close_auxiliary(buf, keep_windows)
+        local bt = vim.bo[buf].buftype
+        if bt == 'nofile' and vim.bo[buf].modified and not confirm_discard(buf) then
+                return false
+        end
+
+        -- Quickfix windows have special window management rules; :cclose is
+        -- the native operation, even when called through <leader>bD.
+        if bt == 'quickfix' then
+                local ok, err = pcall(vim.cmd, 'cclose')
+                if not ok then
+                        vim.notify('Unable to close quickfix: ' .. tostring(err), vim.log.levels.ERROR)
+                end
+                return ok
+        end
+
+        if bt == 'terminal' then
+                vim.bo[buf].bufhidden = 'hide'
+        end
+
+        local wins = visible_windows(buf)
+        local original = vim.api.nvim_get_current_win()
+        for _, win in ipairs(wins) do
+                if vim.api.nvim_win_is_valid(win) then
+                        local tab = vim.api.nvim_win_get_tabpage(win)
+                        local can_close = not keep_windows
+                                and #vim.api.nvim_tabpage_list_wins(tab) > 1
+                        if can_close then
+                                local ok, err = pcall(vim.api.nvim_win_close, win, false)
+                                if not ok then
+                                        vim.notify('Unable to close panel window: ' .. tostring(err),
+                                                vim.log.levels.ERROR)
+                                        return false
+                                end
+                        else
+                                local ok, err = pcall(vim.api.nvim_win_set_buf, win, scratch_buffer())
+                                if not ok then
+                                        vim.notify('Unable to replace panel: ' .. tostring(err),
+                                                vim.log.levels.ERROR)
+                                        return false
+                                end
+                        end
+                end
+        end
+
+        -- Git/quickfix scratch buffers may already be wiped by bufhidden.
+        -- Terminal buffers remain hidden so the job survives window closure.
+        if bt ~= 'terminal' and vim.api.nvim_buf_is_valid(buf)
+                and #visible_windows(buf) == 0 then
+                pcall(vim.api.nvim_buf_delete, buf, { force = true })
+        end
+        if vim.api.nvim_win_is_valid(original) then
+                pcall(vim.api.nvim_set_current_win, original)
+        end
+        return true
+end
+
+local function is_auxiliary(buf)
+        local bt = vim.bo[buf].buftype
+        return bt == 'terminal' or bt == 'quickfix' or bt == 'nofile' or bt == 'prompt'
+end
+
 -- <leader>bD: delete the buffer but leave all its windows open.
 function M.close_keep_windows()
         local buf = vim.api.nvim_get_current_buf()
-        if not prepare_to_delete(buf) then
+        if is_auxiliary(buf) then
+                return close_auxiliary(buf, true)
+        end
+        local ready, force = prepare_to_delete(buf, true)
+        if not ready then
                 return false
         end
 
@@ -96,7 +184,7 @@ function M.close_keep_windows()
                 replaced[#replaced + 1] = win
         end
 
-        if not delete_buffer(buf) then
+        if not delete_buffer(buf, force) then
                 -- An autocmd may reject deletion. Restore the windows if possible.
                 for _, win in ipairs(replaced) do
                         if vim.api.nvim_win_is_valid(win) and vim.api.nvim_buf_is_valid(buf) then
@@ -116,12 +204,16 @@ end
 -- Do not quit the editor by closing its final window.
 function M.close_with_windows()
         local buf = vim.api.nvim_get_current_buf()
-        if not prepare_to_delete(buf) then
+        if is_auxiliary(buf) then
+                return close_auxiliary(buf, false)
+        end
+        local ready, force = prepare_to_delete(buf, true)
+        if not ready then
                 return false
         end
 
         local wins = visible_windows(buf)
-        if not delete_buffer(buf) then
+        if not delete_buffer(buf, force) then
                 return false
         end
 
@@ -187,10 +279,10 @@ function M.close_empty()
 end
 
 vim.keymap.set('n', '<leader>bD', M.close_keep_windows, {
-        desc = 'Save existing file and delete buffer; keep windows open',
+        desc = 'Safely close buffer; keep windows open',
 })
 vim.keymap.set('n', '<leader>bd', M.close_with_windows, {
-        desc = 'Save existing file and close buffer and its windows',
+        desc = 'Safely close buffer and its windows',
 })
 vim.keymap.set('n', '<leader>caec', M.close_all_except_visible, {
         desc = 'Close hidden buffers without losing unsaved changes',
