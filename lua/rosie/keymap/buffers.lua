@@ -119,10 +119,6 @@ local function close_auxiliary(buf, keep_windows)
                 return ok
         end
 
-        if bt == 'terminal' then
-                vim.bo[buf].bufhidden = 'hide'
-        end
-
         local wins = visible_windows(buf)
         local original = vim.api.nvim_get_current_win()
         for _, win in ipairs(wins) do
@@ -148,15 +144,27 @@ local function close_auxiliary(buf, keep_windows)
                 end
         end
 
-        -- Git/quickfix scratch buffers may already be wiped by bufhidden.
-        -- Terminal buffers remain hidden so the job survives window closure.
-        if bt ~= 'terminal' and vim.api.nvim_buf_is_valid(buf)
+        if vim.api.nvim_buf_is_valid(buf)
                 and #visible_windows(buf) == 0 then
-                pcall(vim.api.nvim_buf_delete, buf, { force = true })
+                local ok, err = pcall(
+                        vim.api.nvim_buf_delete,
+                        buf,
+                        { force = true }
+                )
+
+                if not ok then
+                        vim.notify(
+                                'Unable to delete buffer ' .. buf .. ':\n' .. tostring(err),
+                                vim.log.levels.ERROR
+                        )
+                        return false
+                end
         end
+
         if vim.api.nvim_win_is_valid(original) then
                 pcall(vim.api.nvim_set_current_win, original)
         end
+
         return true
 end
 
