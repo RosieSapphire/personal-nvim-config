@@ -83,7 +83,9 @@ local function scratch(title, filetype, text)
 
         local buf = vim.api.nvim_get_current_buf()
 
-        vim.api.nvim_buf_set_name(buf, title)
+        -- Each view needs a unique buffer name, even if another Git view
+        -- with the same title is still open.
+        vim.api.nvim_buf_set_name(buf, string.format('[Rosie Git %d] %s', buf, title))
         vim.bo[buf].buftype = 'nofile'
         vim.bo[buf].bufhidden = 'wipe'
         vim.bo[buf].swapfile = false
@@ -93,12 +95,19 @@ local function scratch(title, filetype, text)
         vim.api.nvim_buf_set_lines(buf, 0, -1, false, out_lines)
 
         vim.bo[buf].modifiable = false
+        vim.bo[buf].modified = false -- generated Git output is not user work
 
-        vim.keymap.set('n', 'q', '<cmd>bd!<cr>', {
-                buffer = buf,
-                silent = true,
-                desc = 'Close git buffer',
-        })
+        local close_git_view = function()
+                -- Close the WINDOW, not merely the buffer; avoid orphan splits.
+                require('rosie.keymap.buffers').close_with_windows()
+        end
+        for _, lhs in ipairs({ 'q', '<leader>qq' }) do
+                vim.keymap.set('n', lhs, close_git_view, {
+                        buffer = buf,
+                        silent = true,
+                        desc = 'Close Git view',
+                })
+        end
 
         return buf
 end
