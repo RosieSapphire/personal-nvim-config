@@ -24,6 +24,11 @@ vim.opt.signcolumn  = 'yes' -- Figure out what this does
 vim.opt.colorcolumn = '78'
 vim.opt.textwidth   = 78
 
+-- Configuration --
+vim.opt.formatoptions       = 'jcroqln';
+vim.opt.grepformat          = '%f:%l:%c:%m';
+vim.opt_local.commentstring = '/* %s */';
+
 -- Diagnostics --
 vim.diagnostic.config({
         virtual_text = false,
