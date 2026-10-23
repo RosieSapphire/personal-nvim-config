@@ -302,4 +302,8 @@ vim.keymap.set('n', '<leader>caeb', M.close_empty, {
         desc = 'Close genuinely empty, unmodified, unnamed buffers'
 })
 
+vim.keymap.set('n', '<leader>new', '<cmd>enew<CR>', {
+        desc = 'Create a new empty buffer in  current window',
+})
+
 return M
