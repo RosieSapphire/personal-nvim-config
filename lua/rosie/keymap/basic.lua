@@ -71,39 +71,41 @@ bind_term_gen_cmd('j', 'down below')
 bind_term_gen_cmd('k', 'up above')
 bind_term_gen_cmd('c', 'in current window')
 
--- It's fucking retarded that Vim doesn't fucking do this already.
-vim.keymap.set('n', '<C-w>N', function()
-        vim.cmd('wincmd n')
-        vim.cmd('wincmd L') -- Right is most common placement for me at least.
-end, { desc = "Open new window horizontally" })
+------------------------------------------------------------------------------
+-- It's fucking retarded that Vim doesn't fucking have this already.        --
+-- The right side of the screen is most common placement for me at least.   --
+------------------------------------------------------------------------------
+vim.keymap.set('n', '<C-w>N', '<cmd>wincmd n<CR><cmd>wincmd L<CR>', {
+        desc = "Open new window horizontally"
+})
 
-vim.keymap.set('n', '<leader>pv', function()
-        vim.cmd.Ex()
-end, { desc = "Open Vim's file browser (newrt)." })
+vim.keymap.set('n', '<leader>pv', '<cmd>Ex<CR>', {
+        desc = "Open Vim's file browser (newrt)."
+})
 
 vim.keymap.set({ 'n', 'x' }, '<leader>cp', function()
         vim.api.nvim_feedkeys('"+y', 'n', true)
 end, { desc = "Yank some shit into the system's clipboard." })
 
-vim.keymap.set('n', '<leader>mason', function()
-        vim.cmd('Mason')
-end, { desc = "Open the Mason window (rarely-used, hence long name)." })
+vim.keymap.set('n', '<leader>mason', '<cmd>Mason<CR>', {
+        desc = "Open the Mason window (rarely-used, hence long name)."
+})
 
-vim.keymap.set('n', '<leader>lr', function()
-        vim.cmd('registers')
-end, { desc = "List contents of all registers." })
+vim.keymap.set('n', '<leader>lr', '<cmd>registers<CR>', {
+        desc = "List contents of all registers."
+})
 
-vim.keymap.set('n', '<leader>qo', function()
-        vim.cmd('botright copen')
-end, { desc = "Open quickfix window." })
+vim.keymap.set('n', '<leader>qo', '<cmd>botright copen<CR>', {
+        desc = "Open quickfix window."
+})
 
-vim.keymap.set('n', '<leader>qq', function()
-        vim.cmd('cclose')
-end, { desc = "Close quickfix window." })
+vim.keymap.set('n', '<leader>qq', '<cmd>cclose<CR>', {
+        desc = "Close quickfix window."
+})
 
-vim.keymap.set('n', '<leader>so', function()
-        vim.cmd('so')
-end, { desc = "Source the current file (used for all *.lua file changes)." })
+vim.keymap.set('n', '<leader>so', '<cmd>so<CR>', {
+        desc = "Source the current file (used for all *.lua file changes)."
+})
 
 vim.keymap.set('n', '<leader>msgo', '<cmd>messages<CR>', {
         desc   = "Bring up the 'message history' menu.",
@@ -120,8 +122,7 @@ vim.keymap.set('n', '<leader>pwd', '<cmd>pwd<CR>', {
         silent = true
 })
 
-local function bind_cmd_simple(keys, cmd)
-        vim.keymap.set('n', keys, function() vim.cmd(cmd) end, {})
-end
-
-bind_cmd_simple('<leader>w', 'write')
+vim.keymap.set('n', '<leader>w', '<cmd>write<CR>', {
+        desc   = "Write open buffer to its respective file (if applicable).",
+        silent = true
+})
