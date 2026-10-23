@@ -26,104 +26,61 @@ vim.keymap.set('n', ',hg', function()
         vim.fn.winrestview(view)
 end, { desc = "Generate named header-guard.", noremap = true, silent = true })
 
--- #ifdef & #ifndef with names
-local function ifdef_mode_normal(guard, do_else)
+local function ifdef_mapper(mode, prefix, do_else)
         return function()
-                local ok, name = pcall(vim.fn.input, guard .. ': ', '')
+                local first = vim.fn.line('.')
+                local last  = first
 
-                local real_g = ''
+                if mode == 'x' then
+                        first = vim.fn.line('v')
 
-                if not ok or name == '' then
+                        if first > last then
+                                first, last = last, first
+                        end
+                end
+
+                local ok, expr = pcall(vim.fn.input, prefix)
+
+                if not ok or expr:match('^%s*$') then
                         return
                 end
 
-                -- Exception for `#if 0`
-                if name == '0' then
-                        real_g = '#if'
-                else
-                        real_g = guard
-                end
-
-                vim.fn.append(vim.fn.line('.') - 1,
-                        real_g .. ' ' .. name
-                )
+                local directive = prefix .. expr
+                local closing   = {}
 
                 if do_else then
-                        vim.fn.append(vim.fn.line('.') - 1,
-                                '#else /* ' .. real_g .. ' ' .. name .. ' */'
-                        )
-
-                        vim.fn.append(vim.fn.line('.') - 1,
-                                '#endif /* ' .. real_g .. ' ' .. name .. ' #else */'
-                        )
-                else
-                        vim.fn.append(vim.fn.line('.') - 1,
-                                '#endif /* ' .. real_g .. ' ' .. name .. ' */'
-                        )
+                        closing[#closing + 1] =
+                                '#else /* ' .. directive .. ' */'
                 end
+
+                closing[#closing + 1] =
+                        '#endif /* ' .. directive ..
+                        (do_else and ' #else' or '') .. ' */'
+
+                vim.api.nvim_buf_set_lines(0, last, last, false, closing)
+                vim.api.nvim_buf_set_lines(0, first - 1, first - 1,
+                        false, { directive })
         end
 end
 
-local function ifdef_mode_visual(guard, do_else)
-        return function()
-                local line_a     = vim.fn.line('v')
-                local line_b     = vim.fn.line('.')
-                local ok, name   = pcall(vim.fn.input, guard .. ': ', '')
+local ifdef_maps = {
+        -- Pre-existing `#ifdef <X>`/`#ifndef <X>` macros.
+        {   ',ifd',  '#ifdef ', false },
+        {  ',ifed',  '#ifdef ',  true },
+        {  ',ifnd', '#ifndef ', false },
+        { ',ifned', '#ifndef ',  true },
 
-                local real_g = ''
+        -- Additional `#if <X>`/`#if !<X>`, with respective `#else` stuff! :D
+        {   ',ifx',     '#if ', false },
+        {  ',ifex',     '#if ',  true },
+        {  ',ifnx',    '#if !', false },
+        { ',ifnex',    '#if !',  true },
+}
 
-                if not ok or name == '' then
-                        return
-                end
-
-                -- Exception for `#if 0`
-                if name == '0' then
-                        real_g = '#if'
-                else
-                        real_g = guard
-                end
-
-                if line_a > line_b then
-                        line_a, line_b = line_b, line_a
-                end
-
-                if do_else == true then
-                        vim.fn.append(line_b, {
-                                '#else /* ' .. real_g .. ' ' .. name .. ' */',
-                                '#endif /* ' .. real_g .. ' ' .. name .. ' #else */'
-                        })
-                else
-                        vim.fn.append(line_b, {
-                                '#endif /* ' .. real_g .. ' ' .. name .. ' */'
-                        })
-                end
-
-                vim.fn.append(line_a - 1, {
-                        real_g .. ' ' .. name
-                })
-
-                -- vim.api.nvim_win_set_cursor(0, { line_a, 0 })
+for _, map in ipairs(ifdef_maps) do
+        for _, mode in ipairs({ 'n', 'x' }) do
+                vim.keymap.set(mode, map[1],
+                        ifdef_mapper(mode, map[2], map[3]),
+                        { silent = true })
         end
 end
-
-local function ifdef_macro_mapper(mode, input, guard, do_else)
-        local func
-
-        if mode == 'n' then
-                func = ifdef_mode_normal
-        elseif mode == 'x' then
-                func = ifdef_mode_visual
-        end
-
-        vim.keymap.set(mode, input, func(guard, do_else), { silent = true })
-end
-
-ifdef_macro_mapper('n', ',ifd', '#ifdef', false)
-ifdef_macro_mapper('n', ',ifed', '#ifdef', true)
-ifdef_macro_mapper('n', ',ifnd', '#ifndef', false)
-ifdef_macro_mapper('n', ',ifned', '#ifndef', true)
-
-ifdef_macro_mapper('x', ',ifd', '#ifdef', false)
-ifdef_macro_mapper('x', ',ifed', '#ifdef', true)
-ifdef_macro_mapper('x', ',ifnd', '#ifndef', false)
-ifdef_macro_mapper('x', ',ifned', '#ifndef', true)
