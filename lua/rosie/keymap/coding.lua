@@ -236,3 +236,41 @@ vim.keymap.set('x', ',up', function()
                 unencase_visual_select('(', ')')
         end)
 end, { desc = "Remove ( ) (visual).", noremap = true, silent = true })
+
+local function todo_search(path)
+        local cmd =
+                "silent grep! -i -w -g '!.git/' -e TODO -e FIXME -- " .. path;
+        local ok, err = pcall(vim.cmd, cmd);
+
+        if not ok and not tostring(err):find("E480:", 1, true) then
+                vim.notify(tostring(err), vim.log.levels.ERROR);
+                return;
+        end
+
+        if #vim.fn.getqflist() == 0 then
+                vim.cmd.cclose();
+                vim.notify(
+                        "No TODO/FIXME matches found",
+                        vim.log.levels.INFO
+                );
+                return;
+        end
+
+        vim.cmd.copen();
+end
+
+vim.keymap.set('n', '<leader>todoc', function()
+        if vim.api.nvim_buf_get_name(0) == "" then
+                vim.notify(
+                        "Current buffer has no filename",
+                        vim.log.levels.WARN
+                );
+                return;
+        end
+
+        todo_search("%");
+end, { desc = "Show TODO/FIXME for current file", silent = true })
+
+vim.keymap.set('n', '<leader>todoa', function()
+        todo_search(".");
+end, { desc = "Show TODO/FIXME for working directory", silent = true })
