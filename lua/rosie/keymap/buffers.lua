@@ -287,16 +287,19 @@ function M.close_empty()
 end
 
 vim.keymap.set('n', '<leader>bD', M.close_keep_windows, {
-        desc = 'Safely close buffer; keep windows open',
+        desc = 'Safely close buffer; keep windows open'
 })
+
 vim.keymap.set('n', '<leader>bd', M.close_with_windows, {
-        desc = 'Safely close buffer and its windows',
+        desc = 'Safely close buffer and its windows'
 })
+
 vim.keymap.set('n', '<leader>caec', M.close_all_except_visible, {
-        desc = 'Close hidden buffers without losing unsaved changes',
+        desc = 'Close hidden buffers without losing unsaved changes'
 })
+
 vim.keymap.set('n', '<leader>caeb', M.close_empty, {
-        desc = 'Close genuinely empty, unmodified, unnamed buffers',
+        desc = 'Close genuinely empty, unmodified, unnamed buffers'
 })
 
 return M
