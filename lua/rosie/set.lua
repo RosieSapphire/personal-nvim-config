@@ -25,9 +25,8 @@ vim.opt.colorcolumn = '78'
 vim.opt.textwidth   = 78
 
 -- Configuration --
-vim.opt.formatoptions       = 'jcroqln';
-vim.opt.grepformat          = '%f:%l:%c:%m';
-vim.opt_local.commentstring = '/* %s */';
+vim.opt.formatoptions = 'jcroqln';
+vim.opt.grepformat    = '%f:%l:%c:%m';
 
 -- Diagnostics --
 vim.diagnostic.config({
