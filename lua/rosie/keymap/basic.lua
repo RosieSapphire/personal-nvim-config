@@ -60,7 +60,7 @@ local function bind_term_gen_cmd(mv_key, rel_pos_str)
                 end
 
                 vim.api.nvim_feedkeys(
-                        vim.keycode([[<C-\><C-n><C-w>10>A]]), 'n', true
+                        vim.keycode([[<C-\><C-n><C-w>5>A]]), 'n', true
                 )
         end, { desc = "Open new terminal " .. rel_pos_str .. "." })
 end
