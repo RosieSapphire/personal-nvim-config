@@ -1,13 +1,14 @@
 local snip = require 'rosie.keymap.snippets.funcs'
 local dir  = snip.get_dir()
 
-snip.bind_create('n', ',dbm', 'debug_macro', '')
-snip.bind_create('n', ',hello', 'hello_world', '')
-snip.bind_create('n', ',bast', 'basic_types', '')
-snip.bind_create('n', ',pgcc', 'pragma_gcc', 'j$i')
-snip.bind_create('n', ',pcla', 'pragma_clang', 'j$i')
-snip.bind_create('n', ',inc', 'inc_setup_quote', '$hhi')
-snip.bind_create('n', ',binc', 'inc_setup_angle', '$hhi')
+snip.bind_create('n',   ',dbm',     'debug_macro', '',     '')
+snip.bind_create('n', ',hello',     'hello_world', '',     '')
+snip.bind_create('n',  ',bast',     'basic_types', '',     '')
+snip.bind_create('n',  ',pgcc',      'pragma_gcc', '',  'j$i')
+snip.bind_create('n',  ',pcla',    'pragma_clang', '',  'j$i')
+snip.bind_create('n',   ',inc', 'inc_setup_quote', '', '$2hi')
+snip.bind_create('n',  ',binc', 'inc_setup_angle', '', '$2hi')
+snip.bind_create('n',  ',bash',      'bash_start', '', 'kJjo')
 
 vim.keymap.set('n', ',hg', function()
         local ok, guard = pcall(vim.fn.input, 'Header Guard Name: ')
