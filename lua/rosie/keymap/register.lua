@@ -55,9 +55,80 @@ vim.keymap.set('n', '<leader>rs', function()
         end)
 end, { desc = 'Use current line as TEXT macro definition' })
 
--- "Registry Print "
+-- "Registry Print"
 vim.keymap.set('n', '<leader>rp', function()
         with_macro_reg(function(reg)
                 macro_put(vim.fn.keytrans(vim.fn.getreg(reg)))
         end)
 end, { desc = 'Print TEXT version of macro to buffer' })
+
+-- "Registry Clear"
+vim.keymap.set('n', '<leader>rClear', function()
+        local all = 'abcdefghijklmnopqrstuvwxyz0123456789'
+
+        local ok, input = pcall(
+                vim.fn.input,
+                'Registers to clear [!][a-z, 0-9, *]: '
+        )
+
+        if not ok or input == '' then
+                return
+        end
+
+        if input == '!*' then
+                vim.notify(
+                        'Cannot exclude all registers!',
+                        vim.log.levels.WARN
+                )
+                return
+        end
+
+        local exclude = input:sub(1, 1) == '!'
+        local spec = exclude and input:sub(2) or input
+
+        if spec ~= '*' and not spec:match('^[a-z0-9]+$') then
+                vim.notify(
+                        'Invalid register specification: ' .. input,
+                        vim.log.levels.ERROR
+                )
+                return
+        end
+
+        local selected = {}
+
+        for reg in spec:gmatch('.') do
+                selected[reg] = true
+        end
+
+        local count = 0
+
+        for reg in all:gmatch('.') do
+                if spec == '*' or selected[reg] ~= exclude then
+                        vim.fn.setreg(reg, '', 'c')
+                        count = count + 1
+                end
+        end
+
+        vim.notify(
+                string.format('Cleared %d register%s!',
+                        count, count == 1 and '' or 's')
+        )
+end, { desc = 'Clear selected registers or their complement' })
+vim.keymap.set('n', '<leader>rclear', function()
+        local ok, input = pcall(
+                vim.fn.input,
+                'Type CLEAR to erase registers [a-z, 0-9]: '
+        )
+
+        if not ok or input ~= 'CLEAR' then
+                return
+        end
+
+        for reg in ('0123456789abcdefghijklmnopqrstuvwxyz'):gmatch('.') do
+                vim.fn.setreg(reg, '', 'c')
+        end
+
+        vim.notify('Cleared all 36 registers!')
+end, {
+        desc = 'Clear all named and numbered registers'
+})
