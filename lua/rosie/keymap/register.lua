@@ -44,8 +44,8 @@ local function macro_put(text)
         vim.api.nvim_put(lines, 'l', true, false)
 end
 
--- "Registry Set Text (e.g. esc = <Esc>, space = <Space>)"
-vim.keymap.set('n', '<leader>rst', function()
+-- "Registry Set"
+vim.keymap.set('n', '<leader>rs', function()
         with_macro_reg(function(reg)
                 vim.fn.setreg(
                         reg,
@@ -55,27 +55,9 @@ vim.keymap.set('n', '<leader>rst', function()
         end)
 end, { desc = 'Use current line as TEXT macro definition' })
 
--- "Registry Set Binary (e.g. esc = , space = ' ')"
-vim.keymap.set('n', '<leader>rsb', function()
-        with_macro_reg(function(reg)
-                vim.fn.setreg(
-                        reg,
-                        vim.api.nvim_get_current_line(),
-                        'c'
-                )
-        end)
-end, { desc = 'Use current line as BINARY macro definition' })
-
--- "Registry Print Text (e.g. esc = <Esc>, space = <Space>)"
-vim.keymap.set('n', '<leader>rpt', function()
+-- "Registry Print "
+vim.keymap.set('n', '<leader>rp', function()
         with_macro_reg(function(reg)
                 macro_put(vim.fn.keytrans(vim.fn.getreg(reg)))
         end)
 end, { desc = 'Print TEXT version of macro to buffer' })
-
--- "Registry Print Binary (e.g. esc = , space = ' ')"
-vim.keymap.set('n', '<leader>rpb', function()
-        with_macro_reg(function(reg)
-                macro_put(vim.fn.getreg(reg))
-        end)
-end, { desc = 'Print BINARY version of macro to buffer' })
