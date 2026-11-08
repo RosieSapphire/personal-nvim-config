@@ -1,6 +1,7 @@
 require 'rosie.keymap.basic'
 require 'rosie.keymap.buffers'
 require 'rosie.keymap.coding'
+require 'rosie.keymap.commands'
 require 'rosie.keymap.find'
 require 'rosie.keymap.format'
 require 'rosie.keymap.git'
