@@ -114,21 +114,3 @@ vim.keymap.set('n', '<leader>rClear', function()
                         count, count == 1 and '' or 's')
         )
 end, { desc = 'Clear selected registers or their complement' })
-vim.keymap.set('n', '<leader>rclear', function()
-        local ok, input = pcall(
-                vim.fn.input,
-                'Type CLEAR to erase registers [a-z, 0-9]: '
-        )
-
-        if not ok or input ~= 'CLEAR' then
-                return
-        end
-
-        for reg in ('0123456789abcdefghijklmnopqrstuvwxyz'):gmatch('.') do
-                vim.fn.setreg(reg, '', 'c')
-        end
-
-        vim.notify('Cleared all 36 registers!')
-end, {
-        desc = 'Clear all named and numbered registers'
-})
