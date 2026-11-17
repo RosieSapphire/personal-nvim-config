@@ -49,13 +49,24 @@ vim.keymap.set('n', '<leader>xs', function()
         execute_line(true)
 end, { desc = 'Execute current line as shell command' })
 
+--[[
+-- "Execute Raw" (basically the other two, but with no wrapper; just RAW!) >:D
+vim.keymap.set('n', '<leader>xr', function()
+        local cmd = vim.api.nvim_get_current_line()
+        vim.cmd(cmd)
+end, { desc = 'Execute current line directly as an Ex command' })
+]]
+
 -- "Execute [through] Calculator" (equal whatever math you want with 'calc'!)
 vim.keymap.set('n', '<leader>xc', function()
-        local expr = vim.api.nvim_get_current_line()
+        local expr  = vim.api.nvim_get_current_line()
+        local count = vim.v.count1
+        local seed  = math.floor(vim.uv.hrtime() % 2147483647)
 
-        local output = vim.fn.systemlist(
-                { 'calc', '-p' }, expr .. '\n'
-        )
+        local input = string.format('srand(%d),\n', seed)
+                .. string.rep(expr .. '\n', count)
+
+        local output = vim.fn.systemlist({ 'calc', '-p' }, input)
 
         if vim.v.shell_error ~= 0 then
                 vim.notify(
@@ -69,9 +80,16 @@ vim.keymap.set('n', '<leader>xc', function()
                 return
         end
 
+        -- Put the newest result nearest the expression.
+        local lines = {}
+
+        for i = #output, 1, -1 do
+                table.insert(lines, output[i])
+        end
+
         local row = vim.api.nvim_win_get_cursor(0)[1]
 
         vim.api.nvim_buf_set_lines(
-                0, row, row, false, output
+                0, row, row, false, lines
         )
 end, { desc = 'Evaluate current line with calc' })
