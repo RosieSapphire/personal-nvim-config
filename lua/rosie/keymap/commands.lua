@@ -49,12 +49,6 @@ vim.keymap.set('n', '<leader>xs', function()
         execute_line(true)
 end, { desc = 'Execute current line as shell command' })
 
---[[
-vim.keymap.set('n', '<leader>xr', function()
-        local cmd = vim.api.nvim_get_current_line()
-        vim.cmd(cmd)
-end, { desc = 'Execute current line directly as an Ex command' })
-]]
 
 -- "Execute [through] Calculator" (equal whatever math you want with 'calc'!)
 vim.keymap.set('n', '<leader>xc', function()
