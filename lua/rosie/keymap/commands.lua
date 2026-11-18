@@ -49,40 +49,100 @@ vim.keymap.set('n', '<leader>xs', function()
         execute_line(true)
 end, { desc = 'Execute current line as shell command' })
 
+-- Helper function for evaluating—what could be a—multi-line math expression!
+local function calc_get_expr()
+        local row = vim.api.nvim_win_get_cursor(0)[1]
+        local last = vim.api.nvim_buf_line_count(0)
+
+        -- Find the beginning of the expression.
+        while row > 1 do
+                local prev = vim.fn.getline(row - 1)
+
+                if not prev:match('\\%s*$') then
+                        break
+                end
+
+                row = row - 1
+        end
+
+        local lines = {}
+
+        -- Collect all continued lines.
+        while true do
+                local line = vim.fn.getline(row)
+                local text, continued = line:gsub('\\%s*$', '')
+
+                lines[#lines + 1] = text
+
+                if continued == 0 then
+                        break
+                end
+
+                if row == last then
+                        error('Unterminated calculator expression!')
+                end
+
+                row = row + 1
+        end
+
+        return table.concat(lines, ''), row
+end
 
 -- "Execute [through] Calculator" (equal whatever math you want with 'calc'!)
 vim.keymap.set('n', '<leader>xc', function()
-        local expr  = vim.api.nvim_get_current_line()
         local count = vim.v.count1
-        local seed  = math.floor(vim.uv.hrtime() % 2147483647)
+        local buf   = vim.api.nvim_get_current_buf()
 
-        local input = string.format('srand(%d),\n', seed)
-                .. string.rep(expr .. '\n', count)
+        local ok, expr, row = pcall(calc_get_expr)
 
-        local output = vim.fn.systemlist({ 'calc', '-p' }, input)
+        if not ok then
+                vim.notify(expr, vim.log.levels.ERROR)
+                return
+        end
 
-        if vim.v.shell_error ~= 0 then
-                vim.notify(
-                        table.concat(output, '\n'),
-                        vim.log.levels.ERROR
+        if expr:match('^%s*$') then
+                return
+        end
+
+        local seed = math.floor(vim.uv.hrtime() % 2147483647)
+        local results = {}
+
+        for i = 1, count do
+                local input = string.format(
+                        'srand(%d),\n%s\n',
+                        (seed + i) % 2147483647 + 1,
+                        expr
                 )
-                return
+
+                local output = vim.fn.systemlist(
+                        { 'calc', '-p' }, input
+                )
+
+                if vim.v.shell_error ~= 0 then
+                        vim.notify(
+                                table.concat(output, '\n'),
+                                vim.log.levels.ERROR
+                        )
+                        return
+                end
+
+                results[i] = output
         end
 
-        if #output == 0 then
-                return
-        end
-
-        -- Put the newest result nearest the expression.
         local lines = {}
 
-        for i = #output, 1, -1 do
-                table.insert(lines, output[i])
+        -- Reverse the order of evaluations, not their contents.
+        for i = #results, 1, -1 do
+                for _, line in ipairs(results[i]) do
+                        lines[#lines + 1] = line
+                end
         end
 
-        local row = vim.api.nvim_win_get_cursor(0)[1]
+        if #lines == 0 then
+                return
+        end
 
         vim.api.nvim_buf_set_lines(
-                0, row, row, false, lines
+                buf, row, row, true, lines
         )
-end, { desc = 'Evaluate current line with calc' })
+end, { desc = 'Evaluate current expression with calc' })
