@@ -39,18 +39,17 @@ local function execute_line(shell)
         vim.api.nvim_buf_set_lines(buf, row, row + 1, true, lines)
 end
 
--- "Execute [in] Editor"
+-- "E[X]ecute (in) Editor"
 vim.keymap.set('n', '<leader>xe', function()
         execute_line(false)
 end, { desc = 'Execute current line as Ex command' })
 
--- "Execute [in] Shell"
+-- "E[X]ecute (in) Shell"
 vim.keymap.set('n', '<leader>xs', function()
         execute_line(true)
 end, { desc = 'Execute current line as shell command' })
 
 --[[
--- "Execute Raw" (basically the other two, but with no wrapper; just RAW!) >:D
 vim.keymap.set('n', '<leader>xr', function()
         local cmd = vim.api.nvim_get_current_line()
         vim.cmd(cmd)
