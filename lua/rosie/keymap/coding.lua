@@ -114,94 +114,162 @@ local function todo_search(path)
         vim.cmd.copen();
 end
 
-local function convert_signature(to_proto)
-        local all = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-        local cursor = vim.api.nvim_win_get_cursor(0)[1]
-        local first, last, close_col
+local function is_function_declarator(node)
+        while node do
+                if node:type() == 'function_declarator' then
+                        local name = node:field('declarator')[1]
+                        return name ~= nil and name:type() == 'identifier'
+                end
 
-        -- Find the function signature containing the cursor.
-        for row = cursor, math.max(1, cursor - 63), -1 do
-                local head = all[row]:match('^(.-)%(')
+                node = node:field('declarator')[1]
+        end
 
-                if head and head:match('%S+%s+%**[%a_][%w_]*%s*$')
-                        and not head:match('^%s*return%s+') then
-                        local chunk = table.concat(
-                                vim.list_slice(all, row, math.min(#all, row + 63)),
-                                '\n'
-                        )
+        return false
+end
 
-                        local open = chunk:find('(', 1, true)
-                        local _, finish = chunk:find('%b()', open)
+local function find_function_signature()
+        local ok, parser = pcall(vim.treesitter.get_parser, 0, 'c')
 
-                        if finish then
-                                local before = chunk:sub(1, finish)
-                                local newlines = select(2, before:gsub('\n', ''))
-                                local end_row = row + newlines
+        if not ok then
+                return nil, 'C Tree-sitter parser is unavailable'
+        end
 
-                                if cursor <= end_row then
-                                        first = row
-                                        last = end_row
-                                        close_col = #before:match('[^\n]*$')
-                                        break
+        parser:parse()
+
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local row = cursor[1] - 1
+        local col = cursor[2]
+        local node = vim.treesitter.get_node({ bufnr = 0, lang = 'c' })
+
+        while node do
+                local kind = node:type()
+
+                if kind == 'function_definition' or kind == 'declaration' then
+                        local declarators = node:field('declarator')
+
+                        if #declarators == 1
+                                and is_function_declarator(declarators[1]) then
+                                if kind == 'declaration' then
+                                        return node
+                                end
+
+                                local body = node:field('body')[1]
+
+                                if body then
+                                        local br, bc = body:start()
+
+                                        if row < br or (row == br and col < bc) then
+                                                return node
+                                        end
                                 end
                         end
                 end
+
+                node = node:parent()
         end
 
-        if not first then
-                vim.notify('No function signature found', vim.log.levels.WARN)
+        return nil, 'No C function signature under cursor'
+end
+
+local function convert_signature(to_proto)
+        local node, err = find_function_signature()
+
+        if not node then
+                vim.notify(err, vim.log.levels.WARN)
                 return
         end
 
-        local lines = vim.api.nvim_buf_get_lines(0, first - 1, last, false)
-        local tail = lines[#lines]:sub(close_col + 1)
-
-        if not tail:match('^%s*;?%s*$') then
-                vim.notify('Signature must end with ) or );', vim.log.levels.WARN)
+        if node:has_error() then
+                vim.notify('Function contains C parse errors; refusing conversion',
+                           vim.log.levels.ERROR)
                 return
         end
+
+        local sr, sc, er, ec = node:range()
+        local kind = node:type()
+        local signature
+
+        if kind == 'function_definition' then
+                local body = node:field('body')[1]
+                local br, bc = body:start()
+
+                signature = table.concat(
+                        vim.api.nvim_buf_get_text(0, sr, sc, br, bc, {}),
+                        '\n'
+                )
+        else
+                signature = table.concat(
+                        vim.api.nvim_buf_get_text(0, sr, sc, er, ec, {}),
+                        '\n'
+                )
+
+                local count
+                signature, count = signature:gsub(';%s*$', '')
+
+                if count ~= 1 then
+                        vim.notify('Expected a function prototype',
+                                   vim.log.levels.WARN)
+                        return
+                end
+        end
+
+        signature = signature:gsub('%s+$', '')
+
+        local lines = vim.split(signature, '\n', { plain = true })
+        local has_extern = lines[1]:match('^extern%s+') ~= nil
 
         if to_proto then
-                if lines[1]:match('^%s*extern%s+') then
-                        return
-                end
-
-                if lines[1]:match('^%s*static%s+') then
-                        vim.notify('Cannot export a static function', vim.log.levels.WARN)
-                        return
-                end
-
-                lines[#lines] = lines[#lines]:sub(1, close_col) .. ';'
-                lines[1] = lines[1]:gsub('^(%s*)', '%1extern ', 1)
-
-                for i = 2, #lines do
-                        lines[i] = '       ' .. lines[i]
-                end
-        else
-                if not lines[1]:match('^%s*extern%s+')
-                        or not tail:match('^%s*;%s*$') then
-                        vim.notify('Not an extern prototype', vim.log.levels.WARN)
-                        return
-                end
-
-                for i = 2, #lines do
-                        if lines[i]:sub(1, 7) ~= '       ' then
-                                vim.notify('Unexpected continuation indentation', vim.log.levels.WARN)
+                if not has_extern then
+                        if lines[1]:match('^static%s+') then
+                                vim.notify('Cannot export a static function',
+                                           vim.log.levels.WARN)
                                 return
+                        end
+
+                        lines[1] = 'extern ' .. lines[1]
+
+                        for i = 2, #lines do
+                                lines[i] = '       ' .. lines[i]
                         end
                 end
 
-                lines[#lines] = lines[#lines]:sub(1, close_col)
-                lines[1] = lines[1]:gsub('^(%s*)extern%s+', '%1', 1)
-
-                for i = 2, #lines do
-                        lines[i] = lines[i]:sub(8)
+                lines[#lines] = lines[#lines] .. ';'
+        else
+                if kind == 'function_definition' then
+                        vim.notify('Already a function definition')
+                        return
                 end
+
+                if has_extern then
+                        for i = 2, #lines do
+                                if not lines[i]:match('^       ') then
+                                        vim.notify(
+                                                'Unexpected continuation indentation',
+                                                vim.log.levels.WARN
+                                        )
+                                        return
+                                end
+                        end
+
+                        lines[1] = lines[1]:gsub('^extern%s+', '', 1)
+
+                        for i = 2, #lines do
+                                lines[i] = lines[i]:sub(8)
+                        end
+                end
+
+                local first_line = vim.api.nvim_buf_get_lines(
+                        0, sr, sr + 1, false
+                )[1]
+
+                local indent = first_line:sub(1, sc)
+
+                lines[#lines + 1] = indent .. '{'
+                lines[#lines + 1] = indent .. '}'
         end
 
-        vim.api.nvim_buf_set_lines(0, first - 1, last, false, lines)
+        vim.api.nvim_buf_set_text(0, sr, sc, er, ec, lines)
 end
-
 
 local function flip_header_source()
         local current = vim.api.nvim_buf_get_name(0)
