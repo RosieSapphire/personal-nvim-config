@@ -202,6 +202,77 @@ local function convert_signature(to_proto)
         vim.api.nvim_buf_set_lines(0, first - 1, last, false, lines)
 end
 
+
+local function flip_header_source()
+        local current = vim.api.nvim_buf_get_name(0)
+        local ext = current:match('%.([ch])$')
+
+        if not ext then
+                vim.notify('Current buffer is not a .c or .h file', vim.log.levels.WARN)
+                return
+        end
+
+        local new_ext = ext == 'c' and 'h' or 'c'
+        local target = current:gsub('%.[ch]$', '.' .. new_ext)
+
+        local function open(path)
+                vim.cmd.edit(vim.fn.fnameescape(path))
+        end
+
+        -- Fast path: corresponding file in the same directory.
+        if vim.fn.filereadable(target) == 1 then
+                open(target)
+                return
+        end
+
+        -- Fallback: search recursively from the current working directory.
+        local root = vim.fn.getcwd()
+
+        if not vim.fs.relpath(root, current) then
+                vim.notify('Current file is outside the working directory', vim.log.levels.WARN)
+                return
+        end
+
+        local filename = vim.fs.basename(target)
+
+        local result = vim.system({
+                'rg', '--files',
+                '-g', filename,
+                '-g', '!**/data/**',
+                '-g', '!**/build/**',
+                '-g', '!**/.git/**',
+        }, {
+                cwd = root,
+                text = true,
+        }):wait()
+
+        if result.code ~= 0 and result.code ~= 1 then
+                vim.notify(result.stderr or 'File search failed', vim.log.levels.ERROR)
+                return
+        end
+
+        local matches = vim.split(result.stdout or '', '\n', { trimempty = true })
+
+        if #matches == 0 then
+                vim.notify('Could not find ' .. filename, vim.log.levels.WARN)
+                return
+        end
+
+        if #matches == 1 then
+                open(vim.fs.joinpath(root, matches[1]))
+                return
+        end
+
+        -- Multiple matches: let the user choose.
+        vim.ui.select(matches, {
+                prompt = 'Choose ' .. filename .. ':',
+        }, function(choice)
+                if choice then
+                        open(vim.fs.joinpath(root, choice))
+                end
+        end)
+end
+
 vim.api.nvim_create_user_command('TagsMake', function()
         if 0 == vim.fn.executable('ctags-universal') then
                 vim.notify("ERROR: `ctags-universal` is not an " ..
@@ -247,6 +318,10 @@ end, {})
 
 vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", {
         noremap = true, silent = true
+})
+
+vim.keymap.set('n', '<leader>hs', flip_header_source, {
+        desc = 'Switch between C source and header',
 })
 
 vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, {
