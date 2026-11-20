@@ -118,6 +118,11 @@ local function is_function_declarator(node)
         while node do
                 if node:type() == 'function_declarator' then
                         local name = node:field('declarator')[1]
+
+                        while name and name:type() == 'pointer_declarator' do
+                                name = name:field('declarator')[1]
+                        end
+
                         return name ~= nil and name:type() == 'identifier'
                 end
 
@@ -127,66 +132,145 @@ local function is_function_declarator(node)
         return false
 end
 
-local function find_function_signature()
-        local ok, parser = pcall(vim.treesitter.get_parser, 0, 'c')
+local function find_bare_signature()
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        local cursor = vim.api.nvim_win_get_cursor(0)[1] - 1
 
-        if not ok then
-                return nil, 'C Tree-sitter parser is unavailable'
-        end
+        for sr = cursor, math.max(0, cursor - 63), -1 do
+                local line = lines[sr + 1]
+                local open = line:find('(', 1, true)
 
-        parser:parse()
+                if open then
+                        local head = line:sub(1, open - 1)
 
-        local cursor = vim.api.nvim_win_get_cursor(0)
-        local row = cursor[1] - 1
-        local col = cursor[2]
-        local node = vim.treesitter.get_node({ bufnr = 0, lang = 'c' })
+                        local valid = head:match('^%s*[%w_%s%*]+$')
+                                and head:match('%s+%**[%a_][%w_]*%s*$')
+                                and not head:match('^%s*return%s+')
 
-        while node do
-                local kind = node:type()
+                        if valid then
+                                local chunk = table.concat(
+                                        vim.api.nvim_buf_get_lines(
+                                                0,
+                                                sr,
+                                                math.min(#lines, sr + 64),
+                                                false
+                                        ),
+                                        '\n'
+                                )
 
-                if kind == 'function_definition' or kind == 'declaration' then
-                        local declarators = node:field('declarator')
+                                local a, b = chunk:find('%b()', open)
 
-                        if #declarators == 1
-                                and is_function_declarator(declarators[1]) then
-                                if kind == 'declaration' then
-                                        return node
-                                end
+                                if a == open then
+                                        local before = chunk:sub(1, b)
+                                        local newlines = select(2, before:gsub('\n', ''))
+                                        local er = sr + newlines
+                                        local ec = #(before:match('[^\n]*$') or '')
+                                        local tail = lines[er + 1]:sub(ec + 1)
 
-                                local body = node:field('body')[1]
+                                        if cursor <= er and tail:match('^%s*$') then
+                                                -- Don't misidentify a body on the next line.
+                                                local next_line
 
-                                if body then
-                                        local br, bc = body:start()
+                                                for i = er + 2, #lines do
+                                                        if lines[i]:match('%S') then
+                                                                next_line = lines[i]
+                                                                break
+                                                        end
+                                                end
 
-                                        if row < br or (row == br and col < bc) then
-                                                return node
+                                                if not next_line
+                                                        or not next_line:match('^%s*[{;]') then
+                                                        return {
+                                                                kind = 'bare',
+                                                                range = {
+                                                                        sr,
+                                                                        (line:find('%S') or 1) - 1,
+                                                                        er,
+                                                                        ec,
+                                                                },
+                                                        }
+                                                end
                                         end
                                 end
                         end
                 end
-
-                node = node:parent()
         end
 
         return nil, 'No C function signature under cursor'
 end
 
-local function convert_signature(to_proto)
-        local node, err = find_function_signature()
+local function find_function_signature()
+        local ok, parser = pcall(vim.treesitter.get_parser, 0, 'c')
 
-        if not node then
+        if ok then
+                parser:parse()
+
+                local cursor = vim.api.nvim_win_get_cursor(0)
+                local row = cursor[1] - 1
+                local col = cursor[2]
+                local node = vim.treesitter.get_node({ bufnr = 0, lang = 'c' })
+
+                while node do
+                        local kind = node:type()
+
+                        if kind == 'function_definition' or kind == 'declaration' then
+                                local declarators = node:field('declarator')
+
+                                if #declarators == 1
+                                        and is_function_declarator(declarators[1]) then
+                                        if kind == 'declaration' then
+                                                local text = vim.treesitter.get_node_text(node, 0)
+
+                                                if text:match(';%s*$') then
+                                                        return {
+                                                                kind = kind,
+                                                                node = node,
+                                                                range = { node:range() },
+                                                        }
+                                                end
+                                        else
+                                                local body = node:field('body')[1]
+
+                                                if body and not body:missing() then
+                                                        local br, bc = body:start()
+
+                                                        if row < br or (row == br and col < bc) then
+                                                                return {
+                                                                        kind = kind,
+                                                                        node = node,
+                                                                        range = { node:range() },
+                                                                }
+                                                        end
+                                                end
+                                        end
+                                end
+                        end
+
+                        node = node:parent()
+                end
+        end
+
+        return find_bare_signature()
+end
+
+local function convert_signature(to_proto)
+        local found, err = find_function_signature()
+
+        if not found then
                 vim.notify(err, vim.log.levels.WARN)
                 return
         end
 
-        if node:has_error() then
-                vim.notify('Function contains C parse errors; refusing conversion',
+        local kind = found.kind
+        local node = found.node
+        local sr, sc, er, ec = unpack(found.range)
+
+        if node and node:has_error() then
+                vim.notify('C parse errors; refusing conversion',
                            vim.log.levels.ERROR)
                 return
         end
 
-        local sr, sc, er, ec = node:range()
-        local kind = node:type()
         local signature
 
         if kind == 'function_definition' then
@@ -203,13 +287,8 @@ local function convert_signature(to_proto)
                         '\n'
                 )
 
-                local count
-                signature, count = signature:gsub(';%s*$', '')
-
-                if count ~= 1 then
-                        vim.notify('Expected a function prototype',
-                                   vim.log.levels.WARN)
-                        return
+                if kind == 'declaration' then
+                        signature = signature:gsub(';%s*$', '')
                 end
         end
 
@@ -243,10 +322,8 @@ local function convert_signature(to_proto)
                 if has_extern then
                         for i = 2, #lines do
                                 if not lines[i]:match('^       ') then
-                                        vim.notify(
-                                                'Unexpected continuation indentation',
-                                                vim.log.levels.WARN
-                                        )
+                                        vim.notify('Unexpected continuation indentation',
+                                                   vim.log.levels.WARN)
                                         return
                                 end
                         end
