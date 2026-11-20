@@ -221,7 +221,7 @@ local function find_function_signature()
                                         if kind == 'declaration' then
                                                 local text = vim.treesitter.get_node_text(node, 0)
 
-                                                if text:match(';%s*$') then
+                                                if not node:has_error() and text:match(';%s*$') then
                                                         return {
                                                                 kind = kind,
                                                                 node = node,
