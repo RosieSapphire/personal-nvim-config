@@ -292,10 +292,18 @@ local function convert_signature(to_proto)
         local node = found.node
         local sr, sc, er, ec = unpack(found.range)
 
-        if node and node:has_error() then
-                vim.notify('C parse errors; refusing conversion',
-                           vim.log.levels.ERROR)
-                return
+        if node then
+                local check_node = node
+
+                if kind == 'function_definition' then
+                        check_node = node:field('declarator')[1]
+                end
+
+                if check_node and check_node:has_error() then
+                        vim.notify('C signature parse errors; refusing conversion',
+                                   vim.log.levels.ERROR)
+                        return
+                end
         end
 
         local signature
