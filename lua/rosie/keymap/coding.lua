@@ -253,6 +253,33 @@ local function find_function_signature()
         return find_bare_signature()
 end
 
+local function has_following_body(er, ec)
+        local lines = vim.api.nvim_buf_get_lines(0, er, -1, false)
+
+        if #lines == 0 then
+                return false
+        end
+
+        -- `ec` is zero-based; Lua string indices are one-based.
+        local tail = lines[1]:sub(ec + 1)
+
+        if tail:match('^%s*{') then
+                return true
+        end
+
+        if tail:match('%S') then
+                return false
+        end
+
+        for i = 2, #lines do
+                if lines[i]:match('%S') then
+                        return lines[i]:match('^%s*{') ~= nil
+                end
+        end
+
+        return false
+end
+
 local function convert_signature(to_proto)
         local found, err = find_function_signature()
 
@@ -319,6 +346,10 @@ local function convert_signature(to_proto)
                         return
                 end
 
+                local body_exists =
+                        kind == 'declaration'
+                        and has_following_body(er, ec)
+
                 if has_extern then
                         for i = 2, #lines do
                                 if not lines[i]:match('^       ') then
@@ -335,14 +366,16 @@ local function convert_signature(to_proto)
                         end
                 end
 
-                local first_line = vim.api.nvim_buf_get_lines(
-                        0, sr, sr + 1, false
-                )[1]
+                if not body_exists then
+                        local first_line = vim.api.nvim_buf_get_lines(
+                                0, sr, sr + 1, false
+                        )[1]
 
-                local indent = first_line:sub(1, sc)
+                        local indent = first_line:sub(1, sc)
 
-                lines[#lines + 1] = indent .. '{'
-                lines[#lines + 1] = indent .. '}'
+                        lines[#lines + 1] = indent .. '{'
+                        lines[#lines + 1] = indent .. '}'
+                end
         end
 
         vim.api.nvim_buf_set_text(0, sr, sc, er, ec, lines)
