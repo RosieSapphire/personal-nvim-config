@@ -479,21 +479,36 @@ vim.api.nvim_create_user_command('TagsMake', function()
 
         local cwd = vim.fn.getcwd();
 
-        tags_job = vim.fn.jobstart({'ctags-universal', '-R', '.'}, {
-                cwd     = cwd,
-                on_exit = function(_, code)
-                        tags_job = nil;
+        tags_job = vim.fn.jobstart(
+                {
+                        'ctags-universal',
+                        '--recurse=yes',
+                        '--exclude=build',
+                        '--exclude=tags',
+                        '.'
+                },
+                {
+                        cwd     = cwd,
+                        on_exit = function(_, code)
+                                tags_job = nil;
 
-                        if 0 ~= code then
-                                vim.notify("ERROR: Failed to generate CTags!",
-                                           vim.log.levels.ERROR)
-                                return;
-                        end
+                                if 0 ~= code then
+                                        vim.notify(
+                                                "ERROR: Failed to " ..
+                                                "generate CTags!",
+                                                vim.log.levels.ERROR
+                                        )
+                                        return;
+                                end
 
-                        vim.notify("CTags generated successfully in: " .. cwd,
-                                   vim.log.levels.INFO)
-                end,
-        })
+                                vim.notify(
+                                        "CTags generated successfully in: " ..
+                                        cwd,
+                                        vim.log.levels.INFO
+                                )
+                        end,
+                }
+        )
 
         if tags_job <= 0 then
                 tags_job = nil;
