@@ -68,6 +68,23 @@ vim.lsp.config('clangd', {
 
 vim.lsp.enable('clangd')
 
+-- Makefile
+vim.lsp.config(
+        'make_ls',
+        {
+                cmd          = { 'make-ls' },
+                filetypes    = {    'make' },
+                root_markers = {
+                        'Makefile',
+                        'makefile',
+                        'GNUmakefile',
+                        '.git'
+                }
+        }
+)
+
+vim.lsp.enable('make_ls')
+
 -- :checkhealth checks the configuration, but does not guarantee that a
 -- client actually attached to the buffer currently being edited.
 vim.api.nvim_create_user_command('RosieLspInfo', function()
